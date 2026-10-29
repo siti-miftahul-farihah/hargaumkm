@@ -8,7 +8,7 @@ Kalkulator harga jual dan pengelola keuangan untuk UMKM Indonesia. Aplikasi web 
 - Email: `demo@hargaumkm.id`
 - Kata sandi: `demo123`
 
-Akun demo berstatus Premium dengan 5 produk dan 4 riwayat contoh. Akun baru otomatis memakai paket Gratis.
+Akun demo berstatus Premium dengan 5 produk dan 4 riwayat contoh. Data akun demo tersimpan terpusat di Supabase, jadi dapat dibuka dari perangkat mana pun.
 
 ## Fitur
 
@@ -44,27 +44,48 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 - JavaScript vanilla, tanpa build step
 - Lucide Icons
 - jsPDF + AutoTable
-- `localStorage` sebagai penyimpanan data
+- Supabase Auth + PostgreSQL (`hargaumkm_data`)
+- GitHub Pages untuk hosting frontend
+
+## Menyiapkan Supabase
+
+1. Buat project di https://supabase.com.
+2. Buka **SQL Editor → New query**.
+3. Salin seluruh isi `supabase/schema.sql`, tempel, lalu klik **Run**.
+4. Buka **Authentication → Providers → Email** dan pastikan email aktif.
+5. Untuk mempermudah pengujian, matikan **Confirm email** pada **Authentication → Sign In / Providers**.
+6. Buka **Authentication → URL Configuration**, lalu isi:
+   - **Site URL**: `https://siti-miftahul-farihah.github.io/hargaumkm/`
+   - **Redirect URLs**: tambahkan URL yang sama. Untuk pengembangan lokal, tambahkan juga `http://localhost:3000/` dan `http://localhost:4173/`.
+7. Buka **Project Settings → API**, ambil **Project URL** dan **anon public key**. Masukkan keduanya ke `assets/js/config.js`.
+
+Jangan pernah menaruh **service_role key** atau database password di frontend.
 
 ## Menjalankan secara lokal
 
-Buka `index.html` langsung di browser, atau jalankan static server dari folder ini:
+Jalankan static server dari folder ini:
 
 ```bash
 npx serve .
 ```
 
-Aplikasi memerlukan koneksi internet untuk memuat Tailwind, font, ikon, dan jsPDF dari CDN.
+Lalu buka alamat yang ditampilkan (biasanya `http://localhost:3000`).
+
+Aplikasi memerlukan koneksi internet untuk memuat Tailwind, font, ikon, jsPDF, dan Supabase dari CDN.
 
 ## Deploy ke GitHub Pages
 
-1. Buat repository baru di GitHub, misalnya `hargaumkm`.
-2. Push folder ini ke repository tersebut.
-3. Buka **Settings → Pages**.
-4. Pada **Build and deployment**, pilih **Deploy from a branch**.
-5. Pilih branch `main` dan folder `/ (root)`, lalu simpan.
-6. Situs akan tersedia di `https://<username>.github.io/hargaumkm/`.
+1. Push folder ini ke repository GitHub.
+2. Buka **Settings → Pages**.
+3. Pada **Build and deployment**, pilih **Deploy from a branch**.
+4. Pilih branch `main` dan folder `/ (root)`, lalu simpan.
+5. Situs akan tersedia di `https://<username>.github.io/hargaumkm/`.
+6. Pastikan **Site URL** dan **Redirect URLs** di Supabase memakai alamat GitHub Pages tersebut.
 
 ## Catatan data
 
-Aplikasi ini tidak memakai backend. Data akun, produk, dan riwayat disimpan di `localStorage` masing-masing browser. Artinya, data tidak tersinkron antarperangkat dan setiap pengunjung memiliki data lokalnya sendiri.
+- Akun dikelola oleh Supabase Auth (email dan kata sandi).
+- Profil, produk, riwayat, dan pengaturan disimpan sebagai satu dokumen JSONB per pengguna di tabel `public.hargaumkm_data`.
+- Row Level Security membatasi setiap pengguna agar hanya bisa membaca dan mengubah baris miliknya sendiri.
+- Data tidak lagi disimpan di `localStorage`, sehingga akun dan data dapat dibuka dari perangkat lain.
+- Akun demo bersifat publik dan dipakai bersama. Jangan menyimpan data pribadi di akun demo.

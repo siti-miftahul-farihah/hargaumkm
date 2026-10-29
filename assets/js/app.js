@@ -27,21 +27,6 @@ window.App = (function () {
     ui: defaultUi(),
 
     init: function () {
-      Store.ensureDemo();
-
-      const session = Store.session();
-      if (session) {
-        this.email = session;
-        try {
-          this.data = Store.load(session);
-        } catch (err) {
-          console.warn('Sesi tidak dapat dimuat', err);
-          Store.logout();
-          this.email = '';
-          this.data = null;
-        }
-      }
-
       window.addEventListener('hashchange', () => {
         U.closeModal();
         this.closeMenus();
@@ -59,8 +44,86 @@ window.App = (function () {
         }
       });
 
-      this.render(false);
+      try {
+        Store.init();
+      } catch (err) {
+        console.error('Supabase gagal dimuat:', err);
+        this.showBootError(err);
+        return;
+      }
+
+      Store.onPasswordRecovery(() => Views.resetPasswordModal());
+
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.innerHTML =
+          '<div class="min-h-[100dvh] grid place-items-center bg-slate-50 px-5">' +
+            '<div class="text-center">' +
+              '<div class="w-10 h-10 rounded-xl bg-brand-600 text-white grid place-items-center mx-auto animate-pulse">' +
+                U.icon('trending-up', 'w-5 h-5') +
+              '</div>' +
+              '<p class="mt-3 text-[12.5px] font-medium text-slate-500">Memuat akun Anda...</p>' +
+            '</div>' +
+          '</div>';
+        U.refreshIcons();
+      }
+
+      this.bootstrap();
     },
+
+    bootstrap: function () {
+      Store.getUser()
+        .then((user) => {
+          if (!user) return null;
+          this.email = user.email || '';
+          return Store.load().then((data) => {
+            this.data = data;
+          });
+        })
+        .then(() => {
+          this.render(false);
+        })
+        .catch((err) => {
+          console.error('Gagal memuat data akun:', err);
+          this.data = null;
+          this.showBootError(err);
+        });
+    },
+
+    showBootError: function (err) {
+      const appEl = document.getElementById('app');
+      if (!appEl) return;
+
+      const message = typeof Store !== 'undefined' && typeof Store.friendlyError === 'function'
+        ? Store.friendlyError(err)
+        : 'Terjadi kesalahan saat memuat aplikasi.';
+
+      const isDatabaseIssue = /tabel|database|schema|RLS/i.test(message);
+
+      appEl.innerHTML =
+        '<div class="min-h-[100dvh] grid place-items-center bg-slate-50 px-5 py-10">' +
+          '<div class="card p-6 sm:p-8 max-w-lg w-full">' +
+            '<div class="w-11 h-11 rounded-2xl bg-red-50 text-red-600 grid place-items-center">' +
+              U.icon('triangle-alert', 'w-5 h-5') +
+            '</div>' +
+            '<h1 class="mt-4 text-lg font-bold tracking-tight text-slate-900">Aplikasi belum dapat memuat data</h1>' +
+            '<p class="mt-1.5 text-[12.5px] text-slate-500 leading-6">' + U.esc(message) + '</p>' +
+            (isDatabaseIssue
+              ? '<div class="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-[11.5px] text-slate-500 leading-5">' +
+                  'Buka Supabase Dashboard → SQL Editor, lalu jalankan seluruh isi berkas ' +
+                  '<code class="font-semibold text-slate-700">supabase/schema.sql</code> dari repositori ini.' +
+                '</div>'
+              : '') +
+            '<div class="mt-5 flex flex-col sm:flex-row gap-2.5">' +
+              '<button data-action="reload" class="btn btn-primary">Coba lagi</button>' +
+              '<button data-action="logout" class="btn btn-secondary">Keluar dari akun</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      U.refreshIcons();
+    },
+
 
     parse: function () {
       const raw = location.hash.replace(/^#\/?/, '');
@@ -202,14 +265,24 @@ window.App = (function () {
       }
     },
 
-    setSession: function (email) {
-      this.email = email;
-      this.data = Store.load(email);
+    setSession: function (data) {
+      this.data = data || null;
+      this.email = data && data.user ? data.user.email : '';
       this.ui = defaultUi();
     },
 
-    save: function () {
-      if (this.data) Store.save(this.data);
+    save: async function (opts) {
+      if (!this.data) return false;
+      const silent = opts && opts.silent;
+
+      try {
+        await Store.save(this.data);
+        return true;
+      } catch (err) {
+        console.error('Gagal menyimpan data ke Supabase:', err);
+        if (!silent) U.toast(Store.friendlyError(err), 'error');
+        return false;
+      }
     },
 
     refresh: function () {
@@ -238,16 +311,29 @@ window.App = (function () {
       if (btn) btn.setAttribute('aria-expanded', 'false');
     },
 
-    logout: function () {
-      Store.logout();
+    logout: async function () {
+      try {
+        await Store.logout();
+      } catch (err) {
+        console.error('Gagal keluar dari Supabase:', err);
+        U.toast('Gagal keluar dari akun. Silakan coba lagi.', 'error');
+        return;
+      }
+
       this.email = '';
       this.data = null;
       this.ui = defaultUi();
+
       U.closeModal();
       U.toast('Anda telah keluar dari akun.', 'info');
-      if (location.hash === '#/' || location.hash === '') this.render(true);
-      else location.hash = '#/';
+
+      if (location.hash === '#/' || location.hash === '') {
+        this.render(true);
+      } else {
+        location.hash = '#/';
+      }
     },
+
 
     onClick: function (e) {
       /* Tutup dropdown user saat klik di luar */
@@ -304,12 +390,22 @@ window.App = (function () {
             location.hash = '#/daftar';
             break;
           }
+          const previousPremium = this.data.user.premium;
+          const previousSince = this.data.user.premiumSince;
           this.data.user.premium = true;
-          this.data.user.premiumSince = this.data.user.premiumSince || new Date().toISOString();
-          this.save();
+          this.data.user.premiumSince = previousSince || new Date().toISOString();
           U.closeModal();
-          U.toast('Premium aktif. Semua fitur sekarang terbuka.');
-          this.refresh();
+          this.save({ silent: true }).then((ok) => {
+            if (!ok) {
+              this.data.user.premium = previousPremium;
+              this.data.user.premiumSince = previousSince;
+              U.toast('Gagal mengaktifkan Premium. Periksa koneksi lalu coba lagi.', 'error');
+              this.refresh();
+              return;
+            }
+            U.toast('Premium aktif. Semua fitur sekarang terbuka.');
+            this.refresh();
+          });
           break;
         }
         case 'close-modal':
@@ -420,6 +516,7 @@ window.App = (function () {
       else if (kind === 'calc') Views.saveProduct();
       else if (kind === 'profile') Views.saveProfile(form);
       else if (kind === 'password') Views.changePassword(form);
+      else if (kind === 'reset-password') Views.resetPasswordSubmit(form);
     },
 
     onInput: function (e) {

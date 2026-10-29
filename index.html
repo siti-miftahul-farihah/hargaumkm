@@ -40,14 +40,20 @@
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed z-[100] bottom-4 right-4 left-4 sm:left-auto sm:w-[360px] flex flex-col gap-2 pointer-events-none"></div>
 
+  <!-- Library eksternal -->
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Konfigurasi publik & utilitas -->
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/calc.js"></script>
   <script src="assets/js/store.js"></script>
   <script src="assets/js/ui.js"></script>
+
+  <!-- Halaman aplikasi -->
   <script src="assets/js/views/landing.js"></script>
   <script src="assets/js/views/auth.js"></script>
   <script src="assets/js/views/dashboard.js"></script>
@@ -59,6 +65,8 @@
   <script src="assets/js/views/reports.js"></script>
   <script src="assets/js/views/settings.js"></script>
   <script src="assets/js/views/help.js"></script>
+
+  <!-- App hanya boleh dimuat satu kali -->
   <script src="assets/js/app.js"></script>
 </body>
 </html>

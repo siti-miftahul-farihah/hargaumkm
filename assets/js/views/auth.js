@@ -50,7 +50,7 @@ window.Views = window.Views || {};
             '<div class="flex justify-between"><span class="text-blue-100/60">Keuntungan</span><span class="font-semibold text-emerald-300 num">Rp 21.500</span></div>' +
           '</div>' +
         '</div>' +
-        '<p class="mt-4 text-[10.5px] text-blue-200/40">HargaUMKM versi demo · data tersimpan di perangkat Anda</p>' +
+        '<p class="mt-4 text-[10.5px] text-blue-200/40">HargaUMKM · akun dan data tersinkron aman di cloud</p>' +
       '</div>' +
     '</aside>';
 
@@ -78,6 +78,18 @@ window.Views = window.Views || {};
     );
   }
 
+  function setBusy(button, busy) {
+    if (!button) return;
+    button.disabled = !!busy;
+    button.classList.toggle('opacity-60', !!busy);
+  }
+
+  function enterApp(data) {
+    App.setSession(data);
+    if (location.hash === '#/app/beranda') App.render(true);
+    else location.hash = '#/app/beranda';
+  }
+
   Views.login = function () {
     return layout(
       '<div class="mb-7">' +
@@ -87,8 +99,8 @@ window.Views = window.Views || {};
       '<form data-form="login" novalidate class="space-y-4">' +
         '<div class="hidden rounded-xl bg-red-50 border border-red-100 px-3.5 py-2.5 text-[12.5px] text-red-700 leading-5" data-form-error></div>' +
         '<div>' +
-          '<label class="label" for="login-id">Email atau nomor HP</label>' +
-          '<input id="login-id" name="identifier" type="text" class="input" placeholder="nama@email.com atau 0812..." autocomplete="username" required>' +
+          '<label class="label" for="login-id">Email</label>' +
+          '<input id="login-id" name="identifier" type="email" class="input" placeholder="nama@email.com" autocomplete="username" required>' +
         '</div>' +
         '<div>' +
           '<div class="flex items-center justify-between mb-1.5">' +
@@ -100,9 +112,6 @@ window.Views = window.Views || {};
             passwordToggle('login-password') +
           '</div>' +
         '</div>' +
-        '<label class="flex items-center gap-2.5 text-[12.5px] text-slate-600 select-none">' +
-          '<input type="checkbox" name="remember" class="checkbox" checked> Ingat saya di perangkat ini' +
-        '</label>' +
         '<button type="submit" class="btn btn-primary btn-block !mt-6 !py-2.5">Masuk ' + U.icon('arrow-right', 'w-4 h-4') + '</button>' +
       '</form>' +
       '<div class="relative my-6">' +
@@ -175,31 +184,68 @@ window.Views = window.Views || {};
           '<input id="forgot-email" name="email" type="email" class="input" value="' + U.esc(prefill) + '" placeholder="nama@email.com" required>' +
         '</div>' +
         '<button type="submit" class="btn btn-primary btn-block mt-5">Kirim tautan reset</button>' +
-        '<p class="mt-3 text-[10.5px] text-slate-400 text-center leading-4">Mode demo: tidak ada email yang benar-benar dikirim.</p>' +
+        '<p class="mt-3 text-[10.5px] text-slate-400 text-center leading-4">Periksa kotak masuk dan folder spam Anda.</p>' +
       '</form>',
       { label: 'Lupa kata sandi' }
     );
   };
 
-  Views.loginSubmit = function (form) {
-    const fd = new FormData(form);
-    const identifier = String(fd.get('identifier') || '').trim();
-    const password = String(fd.get('password') || '');
-    U.formError(form, '');
-
-    if (!identifier) return U.formError(form, 'Masukkan email atau nomor HP Anda.');
-    if (!password) return U.formError(form, 'Masukkan kata sandi.');
-
-    const res = Store.login(identifier, password);
-    if (!res.ok) return U.formError(form, res.error);
-
-    Store.setSession(res.email);
-    App.setSession(res.email);
-    U.toast('Selamat datang kembali, ' + (res.user.name || 'Pengguna').split(' ')[0] + '.');
-    location.hash = '#/app/beranda';
+  Views.resetPasswordModal = function () {
+    U.openModal(
+      '<form data-form="reset-password" class="p-6 sm:p-7" novalidate>' +
+        '<div class="flex items-start justify-between gap-4">' +
+          '<div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center">' + U.icon('shield-check', 'w-5 h-5') + '</div>' +
+          '<button type="button" class="icon-btn !w-9 !h-9" data-action="close-modal" aria-label="Tutup">' + U.icon('x', 'w-4 h-4') + '</button>' +
+        '</div>' +
+        '<h3 class="mt-4 text-lg font-bold tracking-tight">Buat kata sandi baru</h3>' +
+        '<p class="mt-1.5 text-[13px] text-slate-500 leading-6">Masukkan kata sandi baru untuk akun HargaUMKM Anda.</p>' +
+        '<div class="hidden mt-4 rounded-xl bg-red-50 border border-red-100 px-3.5 py-2.5 text-[12.5px] text-red-700" data-form-error></div>' +
+        '<div class="mt-4 space-y-4">' +
+          '<div>' +
+            '<label class="label" for="reset-password">Kata sandi baru</label>' +
+            '<div class="relative">' +
+              '<input id="reset-password" name="password" type="password" class="input pr-11" autocomplete="new-password" minlength="6" placeholder="Minimal 6 karakter" required>' +
+              passwordToggle('reset-password') +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<label class="label" for="reset-confirm">Ulangi kata sandi baru</label>' +
+            '<input id="reset-confirm" name="confirm" type="password" class="input" autocomplete="new-password" required>' +
+          '</div>' +
+        '</div>' +
+        '<button type="submit" class="btn btn-primary btn-block mt-5">Simpan kata sandi</button>' +
+      '</form>',
+      { label: 'Buat kata sandi baru' }
+    );
   };
 
-  Views.registerSubmit = function (form) {
+  Views.loginSubmit = async function (form) {
+    const fd = new FormData(form);
+    const email = String(fd.get('identifier') || '').trim();
+    const password = String(fd.get('password') || '');
+
+    U.formError(form, '');
+    if (!email) return U.formError(form, 'Masukkan email Anda.');
+    if (!password) return U.formError(form, 'Masukkan kata sandi.');
+
+    const button = form.querySelector('button[type="submit"]');
+    setBusy(button, true);
+
+    try {
+      const res = await Store.login(email, password);
+      if (!res.ok) return U.formError(form, res.error);
+
+      enterApp(res.data);
+      const name = (res.data.user.name || 'Pengguna').split(' ')[0];
+      U.toast('Selamat datang kembali, ' + name + '.');
+    } catch (err) {
+      U.formError(form, Store.friendlyError(err));
+    } finally {
+      setBusy(button, false);
+    }
+  };
+
+  Views.registerSubmit = async function (form) {
     const fd = new FormData(form);
     const payload = {
       name: String(fd.get('name') || '').trim(),
@@ -207,40 +253,111 @@ window.Views = window.Views || {};
       phone: String(fd.get('phone') || '').trim(),
       password: String(fd.get('password') || '')
     };
+
     U.formError(form, '');
-
     if (!payload.name) return U.formError(form, 'Nama lengkap wajib diisi.');
-    if (!fd.get('terms')) return U.formError(form, 'Centang persetujuan Syarat & Ketentuan untuk melanjutkan.');
-
-    const res = Store.register(payload);
-    if (!res.ok) return U.formError(form, res.error);
-
-    Store.setSession(res.email);
-    App.setSession(res.email);
-    U.toast('Akun berhasil dibuat. Selamat datang di HargaUMKM!');
-    location.hash = '#/app/beranda';
-  };
-
-  Views.demoLogin = function () {
-    const res = Store.login('demo@hargaumkm.id', 'demo123');
-    if (!res.ok) {
-      U.toast('Akun demo tidak tersedia. Muat ulang halaman lalu coba lagi.', 'error');
-      return;
+    if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+      return U.formError(form, 'Masukkan alamat email yang valid.');
     }
-    Store.setSession(res.email);
-    App.setSession(res.email);
-    U.toast('Masuk sebagai akun demo Premium.');
-    location.hash = '#/app/beranda';
+    if (payload.phone.replace(/\D/g, '').length < 9) {
+      return U.formError(form, 'Nomor HP minimal 9 digit.');
+    }
+    if (payload.password.length < 6) {
+      return U.formError(form, 'Kata sandi minimal 6 karakter.');
+    }
+    if (!fd.get('terms')) {
+      return U.formError(form, 'Centang persetujuan Syarat & Ketentuan untuk melanjutkan.');
+    }
+
+    const button = form.querySelector('button[type="submit"]');
+    setBusy(button, true);
+
+    try {
+      const res = await Store.register(payload);
+      if (!res.ok) return U.formError(form, res.error);
+
+      if (res.needsConfirmation) {
+        U.toast('Pendaftaran berhasil. Periksa email untuk verifikasi, lalu masuk.', 'info');
+        location.hash = '#/masuk';
+        return;
+      }
+
+      enterApp(res.data);
+      U.toast('Akun berhasil dibuat. Selamat datang di HargaUMKM!');
+    } catch (err) {
+      U.formError(form, Store.friendlyError(err));
+    } finally {
+      setBusy(button, false);
+    }
   };
 
-  Views.forgotSubmit = function (form) {
+  Views.demoLogin = async function () {
+    const button = document.querySelector('[data-action="demo-login"]');
+    setBusy(button, true);
+
+    try {
+      const res = await Store.demoLogin();
+      if (!res.ok) {
+        U.toast(res.error || 'Akun demo tidak tersedia. Coba lagi.', 'error');
+        return;
+      }
+
+      enterApp(res.data);
+      U.toast('Masuk sebagai akun demo Premium.');
+    } catch (err) {
+      U.toast(Store.friendlyError(err), 'error');
+    } finally {
+      setBusy(button, false);
+    }
+  };
+
+  Views.forgotSubmit = async function (form) {
     const fd = new FormData(form);
     const email = String(fd.get('email') || '').trim();
     U.formError(form, '');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return U.formError(form, 'Masukkan email yang valid.');
     }
-    U.closeModal();
-    U.toast('Tautan reset dikirim ke ' + email + ' (demo).', 'info');
+
+    const button = form.querySelector('button[type="submit"]');
+    setBusy(button, true);
+
+    try {
+      const res = await Store.forgotPassword(email);
+      if (!res.ok) return U.formError(form, res.error);
+      U.closeModal();
+      U.toast('Tautan reset dikirim ke ' + email + '. Periksa kotak masuk dan folder spam.', 'info');
+    } catch (err) {
+      U.formError(form, Store.friendlyError(err));
+    } finally {
+      setBusy(button, false);
+    }
+  };
+
+  Views.resetPasswordSubmit = async function (form) {
+    const fd = new FormData(form);
+    const password = String(fd.get('password') || '');
+    const confirm = String(fd.get('confirm') || '');
+
+    U.formError(form, '');
+    if (password.length < 6) return U.formError(form, 'Kata sandi baru minimal 6 karakter.');
+    if (password !== confirm) return U.formError(form, 'Ulangi kata sandi baru dengan benar.');
+
+    const button = form.querySelector('button[type="submit"]');
+    setBusy(button, true);
+
+    try {
+      const res = await Store.setPassword(password);
+      if (!res.ok) return U.formError(form, res.error);
+
+      U.closeModal();
+      U.toast('Kata sandi berhasil diperbarui. Anda sudah masuk.');
+      if (App.data) enterApp(App.data);
+      else location.hash = '#/masuk';
+    } catch (err) {
+      U.formError(form, Store.friendlyError(err));
+    } finally {
+      setBusy(button, false);
+    }
   };
 })();

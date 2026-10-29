@@ -21,7 +21,7 @@ window.Views = window.Views || {};
     },
     {
       q: 'Apakah data saya tersimpan dengan aman?',
-      a: 'Pada versi demo ini, data disimpan di localStorage perangkat Anda dan tidak dikirim ke server mana pun. Untuk penggunaan produksi, diperlukan backend dengan autentikasi, enkripsi, dan pencadangan data.'
+      a: 'Akun, produk, dan riwayat disimpan di server Supabase dengan autentikasi dan Row Level Security. Setiap pengguna hanya dapat membuka data miliknya sendiri, dan data dapat diakses dari perangkat lain setelah masuk.'
     },
     {
       q: 'Bagaimana cara upgrade ke Premium?',

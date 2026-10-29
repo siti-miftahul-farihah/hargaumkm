@@ -53,7 +53,7 @@ window.Views = window.Views || {};
             '<div class="sm:col-span-2">' +
               '<label class="label" for="set-email">Email</label>' +
               '<input id="set-email" class="input" type="email" value="' + U.esc(u.email) + '" disabled>' +
-              '<p class="hint">Email digunakan untuk masuk dan tidak dapat diubah pada versi demo.</p>' +
+              '<p class="hint">Email digunakan untuk masuk dan tidak dapat diubah di halaman ini.</p>' +
             '</div>' +
             '<div>' +
               '<label class="label" for="set-phone">Nomor HP</label>' +
@@ -276,7 +276,7 @@ window.Views = window.Views || {};
 
         '<section class="card p-5 sm:p-6">' +
           '<h2 class="text-[14px] font-bold text-slate-900">Langganan</h2>' +
-          '<p class="text-[11.5px] text-slate-500 mt-0.5 leading-5">Versi demo ini tidak memproses pembayaran. Aktivasi dan pembatalan berlaku langsung di perangkat Anda.</p>' +
+          '<p class="text-[11.5px] text-slate-500 mt-0.5 leading-5">Versi demo ini tidak memproses pembayaran. Aktivasi dan pembatalan tersimpan di akun Anda.</p>' +
           '<div class="mt-4 flex flex-col sm:flex-row gap-2.5">' +
             (premium
               ? '<button data-action="downgrade" class="btn btn-secondary">Kembali ke paket gratis</button>'
@@ -325,7 +325,7 @@ window.Views = window.Views || {};
     location.hash = '#/app/pengaturan?tab=' + App.ui.settingsTab;
   };
 
-  Views.saveProfile = function (form) {
+  Views.saveProfile = async function (form) {
     const fd = new FormData(form);
     const name = String(fd.get('name') || '').trim();
     const phone = String(fd.get('phone') || '').trim();
@@ -340,13 +340,14 @@ window.Views = window.Views || {};
     user.businessName = String(fd.get('businessName') || '').trim();
     user.businessType = String(fd.get('businessType') || '');
 
-    Store.updateUserRecord(user.email, { name, phone });
-    App.save();
+    const ok = await App.save({ silent: true });
+    if (!ok) return U.formError(form, 'Profil gagal disimpan. Periksa koneksi lalu coba lagi.');
+
     U.toast('Profil berhasil diperbarui.');
     App.refresh();
   };
 
-  Views.changePassword = function (form) {
+  Views.changePassword = async function (form) {
     const fd = new FormData(form);
     const current = String(fd.get('current') || '');
     const next = String(fd.get('next') || '');
@@ -354,23 +355,41 @@ window.Views = window.Views || {};
     U.formError(form, '');
 
     if (!current) return U.formError(form, 'Masukkan kata sandi saat ini.');
-    if (!Store.verifyPassword(App.data.user.email, current)) return U.formError(form, 'Kata sandi saat ini tidak cocok.');
     if (next.length < 6) return U.formError(form, 'Kata sandi baru minimal 6 karakter.');
     if (next !== confirm) return U.formError(form, 'Ulangi kata sandi baru dengan benar.');
     if (next === current) return U.formError(form, 'Kata sandi baru harus berbeda dari yang lama.');
 
-    Store.setPassword(App.data.user.email, next);
-    form.reset();
-    U.toast('Kata sandi berhasil diperbarui.');
+    const button = form.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+
+    try {
+      const valid = await Store.verifyPassword(current);
+      if (!valid) return U.formError(form, 'Kata sandi saat ini tidak cocok.');
+
+      const res = await Store.setPassword(next);
+      if (!res.ok) return U.formError(form, res.error);
+
+      form.reset();
+      U.toast('Kata sandi berhasil diperbarui.');
+    } catch (err) {
+      U.formError(form, Store.friendlyError(err));
+    } finally {
+      if (button) button.disabled = false;
+    }
   };
 
-  Views.verifyPhone = function () {
+  Views.verifyPhone = async function () {
     if (!App.data.user.phone) {
       U.toast('Isi nomor HP terlebih dahulu pada tab Profil.', 'error');
       return;
     }
     App.data.user.phoneVerified = true;
-    App.save();
+    const ok = await App.save({ silent: true });
+    if (!ok) {
+      App.data.user.phoneVerified = false;
+      U.toast('Nomor HP gagal diverifikasi. Periksa koneksi lalu coba lagi.', 'error');
+      return;
+    }
     U.toast('Nomor HP berhasil diverifikasi (demo).');
     App.refresh();
   };
@@ -387,10 +406,17 @@ window.Views = window.Views || {};
       title: 'Kembali ke paket gratis?',
       message: 'Anda akan kehilangan akses ke simulasi promo, perbandingan, dan ekspor PDF. Produk serta riwayat yang sudah ada tetap tersimpan, tetapi produk baru dibatasi 5.',
       confirmText: 'Ya, downgrade',
-      onConfirm: function () {
+      onConfirm: async function () {
+        const previousSince = App.data.user.premiumSince;
         App.data.user.premium = false;
         App.data.user.premiumSince = null;
-        App.save();
+        const ok = await App.save({ silent: true });
+        if (!ok) {
+          App.data.user.premium = true;
+          App.data.user.premiumSince = previousSince;
+          U.toast('Gagal mengubah paket. Periksa koneksi lalu coba lagi.', 'error');
+          return;
+        }
         App.refresh();
         U.toast('Akun kini menggunakan paket gratis.', 'info');
       }
@@ -402,12 +428,20 @@ window.Views = window.Views || {};
       title: 'Hapus semua data usaha?',
       message: 'Seluruh produk, riwayat simulasi, dan preferensi akan dihapus. Akun dan profil tetap ada. Tindakan ini tidak dapat dibatalkan.',
       confirmText: 'Hapus semua data',
-      onConfirm: function () {
+      onConfirm: async function () {
+        const previousProducts = App.data.products;
+        const previousHistory = App.data.history;
         App.data.products = [];
         App.data.history = [];
         App.ui.calc = null;
         App.ui.promo = null;
-        App.save();
+        const ok = await App.save({ silent: true });
+        if (!ok) {
+          App.data.products = previousProducts;
+          App.data.history = previousHistory;
+          U.toast('Gagal menghapus data. Periksa koneksi lalu coba lagi.', 'error');
+          return;
+        }
         App.refresh();
         U.toast('Semua data produk dan riwayat telah dihapus.');
       }

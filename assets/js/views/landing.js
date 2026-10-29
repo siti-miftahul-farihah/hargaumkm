@@ -144,7 +144,7 @@ window.Views = window.Views || {};
           '<section class="border-y border-slate-200/70 bg-white">' +
             '<div class="max-w-7xl mx-auto px-5 lg:px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-[12.5px] font-medium text-slate-600">' +
               [
-                ['shield-check', 'Data tersimpan di perangkat'],
+                ['shield-check', 'Data tersinkron di cloud'],
                 ['wallet', 'Gratis untuk mulai'],
                 ['smartphone', 'Ramah mobile & desktop'],
                 ['languages', 'Bahasa Indonesia']
@@ -397,7 +397,7 @@ window.Views = window.Views || {};
               '</div>' +
               '<div class="mt-8 space-y-2.5 reveal">' +
                 [
-                  ['Apakah data saya aman?', 'Pada versi demo ini, seluruh data disimpan di localStorage perangkat Anda dan tidak dikirim ke server. Untuk versi produksi, gunakan backend dengan autentikasi dan enkripsi.'],
+                  ['Apakah data saya aman?', 'Akun, produk, dan riwayat disimpan di server Supabase. Setiap akun hanya dapat mengakses datanya sendiri, dan koneksi ke server menggunakan HTTPS.'],
                   ['Apakah paket gratis bisa dipakai selamanya?', 'Bisa. Paket gratis tidak memiliki batas waktu. Anda hanya dibatasi pada 5 produk dan 10 riwayat simulasi.'],
                   ['Bagaimana cara upgrade ke Premium?', 'Daftar akun, lalu buka Pengaturan > Keanggotaan atau klik tombol Upgrade. Pada mode demo, premium aktif secara instan tanpa pembayaran.'],
                   ['Apakah komisi marketplace diperhitungkan?', 'Ya. Komisi bisa dimasukkan sebagai nominal rupiah atau persentase dari harga jual, dan otomatis masuk ke total biaya.'],
