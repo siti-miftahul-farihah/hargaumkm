@@ -4,7 +4,7 @@ Kalkulator harga jual dan pengelola keuangan untuk UMKM Indonesia. Aplikasi web 
 
 ## Demo
 
-- URL: _(isi setelah GitHub Pages aktif)_
+- URL: https://siti-miftahul-farihah.github.io/hargaumkm/
 - Email: `demo@hargaumkm.id`
 - Kata sandi: `demo123`
 
