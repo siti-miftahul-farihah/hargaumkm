@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HargaUMKM — Hitung Harga Jual, Raih Keuntungan</title>
+  <meta name="description" content="Kalkulator harga jual dan pengelola keuangan untuk UMKM. Hitung modal, biaya, komisi, dan target margin dalam satu tempat.">
+  <meta name="theme-color" content="#2563EB">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+              800: '#1e40af', 900: '#1e3a8a'
+            },
+            ink: '#0b1b3a'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
+          },
+          boxShadow: {
+            card: '0 1px 2px rgba(15,23,42,.04), 0 24px 48px -36px rgba(15,23,42,.28)'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed z-[100] bottom-4 right-4 left-4 sm:left-auto sm:w-[360px] flex flex-col gap-2 pointer-events-none"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/calc.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/views/landing.js"></script>
+  <script src="assets/js/views/auth.js"></script>
+  <script src="assets/js/views/dashboard.js"></script>
+  <script src="assets/js/views/products.js"></script>
+  <script src="assets/js/views/calculator.js"></script>
+  <script src="assets/js/views/promo.js"></script>
+  <script src="assets/js/views/compare.js"></script>
+  <script src="assets/js/views/history.js"></script>
+  <script src="assets/js/views/reports.js"></script>
+  <script src="assets/js/views/settings.js"></script>
+  <script src="assets/js/views/help.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
