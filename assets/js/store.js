@@ -64,6 +64,9 @@ window.Store = (function () {
     const message = String((err && (err.message || err.error_description)) || '');
     const code = String((err && err.code) || '');
 
+    if (code === 'PGRST202' || /could not find the function|function.*does not exist/i.test(message)) {
+      return 'Fungsi database HargaUMKM belum tersedia. Jalankan berkas supabase/schema.sql di SQL Editor Supabase.';
+    }
     if (code === 'PGRST205' || /could not find the table|schema cache/i.test(message)) {
       return 'Tabel database HargaUMKM belum tersedia. Jalankan berkas supabase/schema.sql di SQL Editor Supabase.';
     }
@@ -273,6 +276,12 @@ window.Store = (function () {
     d.user.createdAt = daysAgo(120);
   }
 
+  function isMissingFunction(err) {
+    const message = String((err && (err.message || err.error_description)) || '');
+    const code = String((err && err.code) || '');
+    return code === 'PGRST202' || /could not find the function|function.*does not exist/i.test(message);
+  }
+
   async function getUser() {
     init();
     const { data, error } = await client.auth.getSession();
@@ -282,49 +291,123 @@ window.Store = (function () {
   }
 
   async function writeRow(user, data) {
-    const { error } = await client.from(TABLE).upsert(
-      {
-        user_id: user.id,
-        email: user.email || '',
-        payload: data
-      },
-      { onConflict: 'user_id' }
-    );
-    if (error) throw error;
+    const { error } = await client.rpc('save_hargaumkm_data', { payload: data });
+
+    if (!error) return;
+
+    // Kompatibilitas mundur: sebelum schema baru dijalankan, simpan ke tabel lama.
+    if (isMissingFunction(error)) {
+      const { error: fallbackError } = await client.from(TABLE).upsert(
+        {
+          user_id: user.id,
+          email: user.email || '',
+          payload: data
+        },
+        { onConflict: 'user_id' }
+      );
+      if (fallbackError) throw fallbackError;
+      return;
+    }
+
+    throw error;
+  }
+
+  async function fetchOldPayload(user) {
+    try {
+      const { data, error } = await client
+        .from(TABLE)
+        .select('payload')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        if (error.code === 'PGRST205' || /could not find the table|schema cache/i.test(error.message || '')) {
+          return null;
+        }
+        throw error;
+      }
+
+      return data && isObject(data.payload) && Object.keys(data.payload).length ? data.payload : null;
+    } catch (err) {
+      if (err && (err.code === 'PGRST205' || /could not find the table|schema cache/i.test(err.message || ''))) {
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  async function clearOldPayload(user) {
+    try {
+      await client.from(TABLE).delete().eq('user_id', user.id);
+    } catch (err) {
+      console.warn('Gagal membersihkan payload lama', err);
+    }
   }
 
   async function fetchPayload(user) {
-    const { data, error } = await client
-      .from(TABLE)
-      .select('payload')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const rpc = await client.rpc('get_hargaumkm_data');
+    const hasNewTables = !rpc.error;
 
-    if (error) throw error;
+    if (rpc.error && !isMissingFunction(rpc.error)) throw rpc.error;
 
     const isDemo = normalize(user.email) === normalize(cfg.demoEmail || 'demo@hargaumkm.id');
     const meta = user.user_metadata || {};
-    const legacy = readLegacy(user.email);
+    const oldPayload = await fetchOldPayload(user);
+    const oldLegacy = oldPayload ? hydrate(oldPayload, user.email) : null;
+    const localLegacy = readLegacy(user.email);
+    const legacy = oldLegacy && (oldLegacy.products.length || oldLegacy.history.length)
+      ? oldLegacy
+      : (localLegacy || oldLegacy);
+    const legacyHasRecords = !!(legacy && (legacy.products.length || legacy.history.length));
 
-    if (data && isObject(data.payload) && Object.keys(data.payload).length) {
-      const appData = hydrate(data.payload, user.email);
+    if (hasNewTables) {
+      const appData = isObject(rpc.data) && isObject(rpc.data.user) ? hydrate(rpc.data, user.email) : null;
 
-      if (legacy && !appData.settings.legacyImported && !appData.products.length && !appData.history.length) {
-        importLegacy(appData, legacy, meta.full_name || meta.name, meta.phone);
-        await writeRow(user, appData);
-        clearLegacy(user.email);
+      if (appData) {
+        const canImport = legacyHasRecords &&
+          !appData.settings.legacyImported &&
+          !appData.products.length &&
+          !appData.history.length;
+
+        if (canImport) {
+          importLegacy(appData, legacy, meta.full_name || meta.name, meta.phone);
+          await writeRow(user, appData);
+          if (oldPayload) await clearOldPayload(user);
+          clearLegacy(user.email);
+          return appData;
+        }
+
+        if (oldPayload) await clearOldPayload(user);
+        if (legacy) clearLegacy(user.email);
+
+        if (isDemo && !appData.products.length) {
+          seed(appData);
+          await writeRow(user, appData);
+        }
         return appData;
       }
 
-      if (isDemo && !appData.products.length) {
-        seed(appData);
-        await writeRow(user, appData);
+      const fresh = blank(user.email, {
+        name: meta.full_name || meta.name || '',
+        phone: meta.phone || ''
+      });
+      fresh.user.createdAt = user.created_at || fresh.user.createdAt;
+
+      if (legacy) {
+        importLegacy(fresh, legacy, meta.full_name || meta.name, meta.phone);
+      } else if (isDemo) {
+        seed(fresh);
       }
-      return appData;
+
+      await writeRow(user, fresh);
+      if (oldPayload) await clearOldPayload(user);
+      if (legacy) clearLegacy(user.email);
+      return fresh;
     }
 
+    // Kompatibilitas mundur: schema baru belum dijalankan, gunakan tabel lama.
     if (legacy) {
-      importLegacy(legacy, legacy, meta.full_name || meta.name, meta.phone);
+      if (isDemo && !legacy.products.length) seed(legacy);
       await writeRow(user, legacy);
       clearLegacy(user.email);
       return legacy;

@@ -44,14 +44,25 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 - JavaScript vanilla, tanpa build step
 - Lucide Icons
 - jsPDF + AutoTable
-- Supabase Auth + PostgreSQL (`hargaumkm_data`)
+- Supabase Auth + PostgreSQL
 - GitHub Pages untuk hosting frontend
+
+## Struktur tabel Supabase
+
+| Tabel | Isi |
+| --- | --- |
+| `hargaumkm_profiles` | Satu baris per pengguna: nama, email, telepon, usaha, kota, status premium. |
+| `hargaumkm_settings` | Satu baris per pengguna: preferensi notifikasi, bahasa, dan penanda migrasi. |
+| `hargaumkm_products` | Satu baris per produk: nama, kategori, modal, biaya, margin, harga jual. |
+| `hargaumkm_history` | Satu baris per riwayat simulasi: produk, harga, untung, margin, diskon. |
+| `hargaumkm_data` | Tabel lama berisi `payload` JSONB. Dipertahankan untuk migrasi otomatis. |
 
 ## Menyiapkan Supabase
 
 1. Buat project di https://supabase.com.
 2. Buka **SQL Editor → New query**.
 3. Salin seluruh isi `supabase/schema.sql`, tempel, lalu klik **Run**.
+   - Jika sebelumnya sudah pernah menjalankan schema lama, jalankan ulang berkas terbaru. Data lama di `hargaumkm_data` tidak dihapus saat schema dijalankan; setelah pengguna masuk, datanya dipindahkan ke tabel baru lalu baris lama dibersihkan.
 4. Buka **Authentication → Providers → Email** dan pastikan email aktif.
 5. Untuk mempermudah pengujian, matikan **Confirm email** pada **Authentication → Sign In / Providers**.
 6. Buka **Authentication → URL Configuration**, lalu isi:
@@ -85,8 +96,10 @@ Aplikasi memerlukan koneksi internet untuk memuat Tailwind, font, ikon, jsPDF, d
 ## Catatan data
 
 - Akun dikelola oleh Supabase Auth (email dan kata sandi).
-- Profil, produk, riwayat, dan pengaturan disimpan sebagai satu dokumen JSONB per pengguna di tabel `public.hargaumkm_data`.
-- Row Level Security membatasi setiap pengguna agar hanya bisa membaca dan mengubah baris miliknya sendiri.
+- Profil, pengaturan, produk, dan riwayat disimpan di tabel terpisah: `hargaumkm_profiles`, `hargaumkm_settings`, `hargaumkm_products`, dan `hargaumkm_history`.
+- Aplikasi memakai fungsi database `get_hargaumkm_data()` dan `save_hargaumkm_data()` agar pembacaan/penyimpanan keempat tabel berjalan konsisten.
+- Sebelum schema baru dijalankan, aplikasi otomatis memakai tabel lama `hargaumkm_data`; setelah schema baru tersedia, aplikasi beralih ke tabel terpisah tanpa perlu mengubah frontend lagi.
+- Row Level Security membatasi setiap pengguna agar hanya bisa membaca dan mengubah baris miliknya sendiri di semua tabel.
 - Data tidak lagi disimpan di `localStorage`, sehingga akun dan data dapat dibuka dari perangkat lain.
-- Data lama dari versi `localStorage` akan diimpor otomatis saat pengguna mendaftar/masuk pertama kali dengan email yang sama. Kata sandi lama tidak dapat dipindahkan, jadi pengguna perlu mendaftar ulang di Supabase Auth.
+- Data lama dari `payload` JSONB dan `localStorage` akan diimpor otomatis ke tabel baru saat pengguna masuk pertama kali. Kata sandi lama tidak dapat dipindahkan, jadi pengguna perlu mendaftar ulang di Supabase Auth.
 - Akun demo bersifat publik dan dipakai bersama. Jangan menyimpan data pribadi di akun demo.
