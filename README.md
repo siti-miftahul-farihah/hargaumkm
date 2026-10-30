@@ -88,4 +88,5 @@ Aplikasi memerlukan koneksi internet untuk memuat Tailwind, font, ikon, jsPDF, d
 - Profil, produk, riwayat, dan pengaturan disimpan sebagai satu dokumen JSONB per pengguna di tabel `public.hargaumkm_data`.
 - Row Level Security membatasi setiap pengguna agar hanya bisa membaca dan mengubah baris miliknya sendiri.
 - Data tidak lagi disimpan di `localStorage`, sehingga akun dan data dapat dibuka dari perangkat lain.
+- Data lama dari versi `localStorage` akan diimpor otomatis saat pengguna mendaftar/masuk pertama kali dengan email yang sama. Kata sandi lama tidak dapat dipindahkan, jadi pengguna perlu mendaftar ulang di Supabase Auth.
 - Akun demo bersifat publik dan dipakai bersama. Jangan menyimpan data pribadi di akun demo.

@@ -122,6 +122,7 @@ window.Views = window.Views || {};
         U.icon('play-circle', 'w-4 h-4 text-brand-600') + 'Masuk dengan akun demo' +
       '</button>' +
       '<p class="mt-2.5 text-center text-[11px] text-slate-400">Demo: demo@hargaumkm.id · sandi demo123</p>' +
+      '<p class="mt-4 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-[11px] text-slate-500 leading-5">Punya data dari versi lama? Daftar ulang dengan email yang sama; produk dan riwayat lokal akan diimpor otomatis.</p>' +
       '<p class="mt-6 text-center text-[12.5px] text-slate-500">Belum punya akun? ' +
         '<a href="#/daftar" class="font-semibold text-brand-600 hover:text-brand-700">Daftar gratis</a>' +
       '</p>'

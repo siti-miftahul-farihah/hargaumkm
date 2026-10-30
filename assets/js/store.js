@@ -4,6 +4,8 @@ window.Store = (function () {
   const DAY = 86400000;
   const cfg = window.HARGAUMKM_CONFIG || {};
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const LEGACY_DATA_PREFIX = 'hargaumkm.data.v1.';
+  const LEGACY_USERS_KEY = 'hargaumkm.users.v1';
 
   let client = null;
   let currentUser = null;
@@ -135,6 +137,51 @@ window.Store = (function () {
     return d;
   }
 
+  function readLegacy(email) {
+    try {
+      const raw = localStorage.getItem(LEGACY_DATA_PREFIX + normalize(email));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!isObject(parsed)) return null;
+      const data = hydrate(parsed, email);
+      return data.products.length || data.history.length ? data : null;
+    } catch (err) {
+      console.warn('Gagal membaca data lokal lama', err);
+      return null;
+    }
+  }
+
+  function clearLegacy(email) {
+    const key = normalize(email);
+    try {
+      localStorage.removeItem(LEGACY_DATA_PREFIX + key);
+      const raw = localStorage.getItem(LEGACY_USERS_KEY);
+      if (!raw) return;
+      const users = JSON.parse(raw);
+      if (!isObject(users) || !users[key]) return;
+      delete users[key];
+      localStorage.setItem(LEGACY_USERS_KEY, JSON.stringify(users));
+    } catch (err) {
+      console.warn('Gagal membersihkan data lokal lama', err);
+    }
+  }
+
+  function importLegacy(appData, legacy, fallbackName, fallbackPhone) {
+    const mergedUser = Object.assign({}, legacy.user, {
+      email: appData.user.email,
+      name: legacy.user.name || fallbackName || '',
+      phone: legacy.user.phone || fallbackPhone || '',
+      premium: Boolean(appData.user.premium || legacy.user.premium),
+      premiumSince: appData.user.premiumSince || legacy.user.premiumSince
+    });
+
+    appData.user = mergedUser;
+    appData.products = legacy.products;
+    appData.history = legacy.history;
+    appData.settings = Object.assign({}, legacy.settings, { legacyImported: true });
+    return appData;
+  }
+
   function makeProduct(def, id, createdAt) {
     const calc = Calc.price(def);
     return Object.assign({}, def, {
@@ -256,9 +303,19 @@ window.Store = (function () {
     if (error) throw error;
 
     const isDemo = normalize(user.email) === normalize(cfg.demoEmail || 'demo@hargaumkm.id');
+    const meta = user.user_metadata || {};
+    const legacy = readLegacy(user.email);
 
     if (data && isObject(data.payload) && Object.keys(data.payload).length) {
       const appData = hydrate(data.payload, user.email);
+
+      if (legacy && !appData.settings.legacyImported && !appData.products.length && !appData.history.length) {
+        importLegacy(appData, legacy, meta.full_name || meta.name, meta.phone);
+        await writeRow(user, appData);
+        clearLegacy(user.email);
+        return appData;
+      }
+
       if (isDemo && !appData.products.length) {
         seed(appData);
         await writeRow(user, appData);
@@ -266,7 +323,13 @@ window.Store = (function () {
       return appData;
     }
 
-    const meta = user.user_metadata || {};
+    if (legacy) {
+      importLegacy(legacy, legacy, meta.full_name || meta.name, meta.phone);
+      await writeRow(user, legacy);
+      clearLegacy(user.email);
+      return legacy;
+    }
+
     const fresh = blank(user.email, {
       name: meta.full_name || meta.name || '',
       phone: meta.phone || ''
@@ -338,9 +401,14 @@ window.Store = (function () {
       }
 
       currentUser = user;
-      const appData = blank(email, { name, phone: data.phone });
+      const legacy = readLegacy(email);
+      const appData = legacy
+        ? importLegacy(blank(email, { name, phone: data.phone }), legacy, name, data.phone)
+        : blank(email, { name, phone: data.phone });
+
       appData.user.createdAt = user.created_at || appData.user.createdAt;
       await writeRow(user, appData);
+      if (legacy) clearLegacy(email);
 
       return { ok: true, email, data: appData, user: appData.user };
     } catch (err) {
