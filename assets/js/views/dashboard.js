@@ -9,8 +9,9 @@ window.Views = window.Views || {};
   };
 
   function statCard(iconName, tone, label, value, foot) {
+    const toneKey = tone.includes('emerald') ? 'profit' : tone.includes('brand') ? 'brand' : 'neutral';
     return (
-      '<div class="card p-5">' +
+      '<div class="card stat-card stat-' + toneKey + ' p-5">' +
         '<div class="flex items-start justify-between gap-3">' +
           '<div class="w-10 h-10 rounded-xl ' + tone + ' grid place-items-center">' + U.icon(iconName, 'w-5 h-5') + '</div>' +
           '<span class="text-[10px] font-semibold text-slate-400">' + U.esc(foot.label) + '</span>' +
@@ -108,7 +109,7 @@ window.Views = window.Views || {};
             label: premium ? 'Tanpa batas' : 'Gratis',
             text: premium ? 'Penyimpanan produk tanpa batas.' : 'Maksimal ' + UI.LIMITS.products + ' produk di paket gratis.'
           }) +
-          statCard('history', 'bg-slate-100 text-slate-600', 'Total Simulasi', U.number(data.history.length), {
+          statCard('history', 'bg-amber-50 text-amber-600', 'Total Simulasi', U.number(data.history.length), {
             label: 'Riwayat',
             text: 'Kalkulasi harga dan simulasi promo tersimpan.'
           }) +

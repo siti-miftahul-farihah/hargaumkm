@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HargaUMKM — Hitung Harga Jual, Raih Keuntungan</title>
   <meta name="description" content="Kalkulator harga jual dan pengelola keuangan untuk UMKM. Hitung modal, biaya, komisi, dan target margin dalam satu tempat.">
-  <meta name="theme-color" content="#2563EB">
+  <meta name="theme-color" content="#4F46E5">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -17,17 +19,18 @@
         extend: {
           colors: {
             brand: {
-              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
-              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
-              800: '#1e40af', 900: '#1e3a8a'
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81'
             },
-            ink: '#0b1b3a'
+            ink: '#141a2e'
           },
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
+            sans: ['"Manrope"', 'system-ui', 'sans-serif'],
+            display: ['"Outfit"', '"Manrope"', 'system-ui', 'sans-serif']
           },
           boxShadow: {
-            card: '0 1px 2px rgba(15,23,42,.04), 0 24px 48px -36px rgba(15,23,42,.28)'
+            card: '0 1px 2px rgba(49,46,129,.04), 0 24px 48px -36px rgba(49,46,129,.24)'
           }
         }
       }
@@ -35,7 +38,7 @@
   </script>
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased">
+<body class="text-slate-900 antialiased">
   <div id="app"></div>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed z-[100] bottom-4 right-4 left-4 sm:left-auto sm:w-[360px] flex flex-col gap-2 pointer-events-none"></div>

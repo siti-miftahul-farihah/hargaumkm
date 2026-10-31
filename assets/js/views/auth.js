@@ -4,7 +4,7 @@ window.Views = window.Views || {};
 (function () {
   const logo = () =>
     '<a href="#/" class="flex items-center gap-2.5">' +
-      '<span class="grid place-items-center w-9 h-9 rounded-xl bg-brand-600 text-white shadow-sm">' +
+      '<span class="logo-mark grid place-items-center w-9 h-9 rounded-xl text-white shadow-sm">' +
         U.icon('trending-up', 'w-[18px] h-[18px]') +
       '</span>' +
       '<span class="font-extrabold tracking-tight text-[17px] text-slate-900">Harga<span class="text-brand-600">UMKM</span></span>' +
@@ -21,8 +21,8 @@ window.Views = window.Views || {};
         '</a>' +
       '</div>' +
       '<div class="relative max-w-[440px]">' +
-        '<p class="text-[10.5px] font-bold tracking-[0.16em] text-blue-300">UNTUK UMKM YANG HITUNG DULU</p>' +
-        '<h1 class="mt-4 text-[2.6rem] xl:text-[3rem] font-extrabold tracking-[-0.03em] leading-[1.05] text-balance">Harga benar,<br>usaha tumbuh.</h1>' +
+        '<p class="text-[10.5px] font-bold tracking-[0.16em] text-teal-300">UNTUK UMKM YANG HITUNG DULU</p>' +
+        '<h1 class="mt-4 text-[2.6rem] xl:text-[3rem] font-extrabold tracking-[-0.03em] leading-[1.05] text-balance">Harga benar,<br><span class="text-gradient-light">usaha tumbuh.</span></h1>' +
         '<p class="mt-4 text-[14px] text-blue-100/75 leading-7 max-w-[40ch]">Ketahui harga jual yang menutup semua biaya dan tetap memberi keuntungan. Tanpa spreadsheet, tanpa menebak.</p>' +
         '<ul class="mt-7 space-y-3 text-[13px] text-blue-50/90">' +
           [
@@ -69,10 +69,10 @@ window.Views = window.Views || {};
               U.icon('arrow-left', 'w-3.5 h-3.5') + 'Beranda' +
             '</a>' +
           '</div>' +
-          '<div class="flex-1 flex items-center justify-center px-5 sm:px-8 py-8">' +
+          '<main class="flex-1 flex items-center justify-center px-5 sm:px-8 py-8">' +
             '<div class="w-full max-w-[420px] view-enter">' + formHtml + '</div>' +
-          '</div>' +
-          '<div class="px-5 sm:px-8 py-5 text-center text-[11px] text-slate-400">© 2026 HargaUMKM · Versi demo</div>' +
+          '</main>' +
+          '<div class="px-5 sm:px-8 py-5 text-center text-[11px] text-slate-500">© 2026 HargaUMKM · Versi demo</div>' +
         '</div>' +
       '</div>'
     );
@@ -116,12 +116,12 @@ window.Views = window.Views || {};
       '</form>' +
       '<div class="relative my-6">' +
         '<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>' +
-        '<div class="relative flex justify-center"><span class="bg-white px-3 text-[11px] text-slate-400">atau coba langsung</span></div>' +
+        '<div class="relative flex justify-center"><span class="bg-white px-3 text-[11px] text-slate-500">atau coba langsung</span></div>' +
       '</div>' +
       '<button type="button" data-action="demo-login" class="btn btn-secondary btn-block !py-2.5">' +
         U.icon('play-circle', 'w-4 h-4 text-brand-600') + 'Masuk dengan akun demo' +
       '</button>' +
-      '<p class="mt-2.5 text-center text-[11px] text-slate-400">Demo: demo@hargaumkm.id · sandi demo123</p>' +
+      '<p class="mt-2.5 text-center text-[11px] text-slate-500">Demo: demo@hargaumkm.id · sandi demo123</p>' +
       '<p class="mt-4 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 text-[11px] text-slate-500 leading-5">Punya data dari versi lama? Daftar ulang dengan email yang sama; produk dan riwayat lokal akan diimpor otomatis.</p>' +
       '<p class="mt-6 text-center text-[12.5px] text-slate-500">Belum punya akun? ' +
         '<a href="#/daftar" class="font-semibold text-brand-600 hover:text-brand-700">Daftar gratis</a>' +

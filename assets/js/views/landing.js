@@ -4,7 +4,7 @@ window.Views = window.Views || {};
 (function () {
   const logo = (light) =>
     '<a href="#/" class="flex items-center gap-2.5">' +
-      '<span class="grid place-items-center w-9 h-9 rounded-xl bg-brand-600 text-white shadow-sm">' +
+      '<span class="logo-mark grid place-items-center w-9 h-9 rounded-xl text-white shadow-sm">' +
         U.icon('trending-up', 'w-[18px] h-[18px]') +
       '</span>' +
       '<span class="font-extrabold tracking-tight text-[17px] ' + (light ? 'text-white' : 'text-slate-900') + '">' +
@@ -75,7 +75,7 @@ window.Views = window.Views || {};
 
         '<main>' +
           /* HERO */
-          '<section class="relative overflow-hidden bg-gradient-to-b from-white via-white to-slate-50/80">' +
+          '<section class="hero-section relative overflow-hidden">' +
             '<div class="absolute inset-0 hero-grid pointer-events-none"></div>' +
             '<div class="relative max-w-7xl mx-auto px-5 lg:px-8 pt-12 pb-16 lg:pt-16 lg:pb-20 grid lg:grid-cols-[1.02fr_.98fr] gap-12 lg:gap-14 items-center">' +
               '<div>' +
@@ -84,7 +84,7 @@ window.Views = window.Views || {};
                   'Kalkulator harga untuk UMKM Indonesia' +
                 '</div>' +
                 '<h1 class="mt-5 text-[2.55rem] leading-[1.04] sm:text-5xl lg:text-[4rem] font-extrabold tracking-[-0.03em] text-slate-950 text-balance">' +
-                  'Hitung harga jual,<br class="hidden sm:block"> <span class="text-brand-600">raih keuntungan.</span>' +
+                  'Hitung harga jual,<br class="hidden sm:block"> <span class="text-gradient">raih keuntungan.</span>' +
                 '</h1>' +
                 '<p class="mt-5 text-[16.5px] sm:text-lg text-slate-600 leading-relaxed max-w-[46ch]">' +
                   'Tentukan harga jual dari modal, biaya operasional, dan target margin. Simpan produk, simulasi promo, dan pantau untung.' +
@@ -97,7 +97,7 @@ window.Views = window.Views || {};
               '</div>' +
 
               '<div class="relative">' +
-                '<div class="absolute -inset-8 bg-gradient-to-tr from-brand-100/70 via-blue-50 to-emerald-50/60 blur-2xl rounded-full"></div>' +
+                '<div class="absolute -inset-8 bg-gradient-to-tr from-brand-100/80 via-amber-50 to-emerald-50/70 blur-2xl rounded-full"></div>' +
                 '<div class="relative card p-5 sm:p-6">' +
                   '<div class="flex items-center justify-between gap-3">' +
                     '<div class="flex items-center gap-2.5">' +
@@ -122,12 +122,12 @@ window.Views = window.Views || {};
                     '</div>' +
                   '</div>' +
                   '<div class="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-4">' +
-                    '<p class="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-400">Harga jual ideal</p>' +
+                    '<p class="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-500">Harga jual ideal</p>' +
                     '<p id="hero-price" class="mt-1 text-[30px] sm:text-[34px] font-extrabold tracking-tight text-slate-900 num leading-none">' + U.rupiah(preview.price || 0) + '</p>' +
                     '<div class="mt-3.5 grid grid-cols-2 gap-3 pt-3 border-t border-slate-200/80">' +
-                      '<div><p class="text-[10.5px] text-slate-400">Keuntungan</p>' +
-                        '<p id="hero-profit" class="text-[13.5px] font-bold text-emerald-600 num mt-0.5">' + U.rupiah(preview.profit || 0) + '</p></div>' +
-                      '<div><p class="text-[10.5px] text-slate-400">Total biaya</p>' +
+                      '<div><p class="text-[10.5px] text-slate-500">Keuntungan</p>' +
+                        '<p id="hero-profit" class="text-[13.5px] font-bold text-emerald-700 num mt-0.5">' + U.rupiah(preview.profit || 0) + '</p></div>' +
+                      '<div><p class="text-[10.5px] text-slate-500">Total biaya</p>' +
                         '<p id="hero-cost" class="text-[13.5px] font-bold text-slate-700 num mt-0.5">' + U.rupiah(preview.costBase || 0) + '</p></div>' +
                     '</div>' +
                   '</div>' +
@@ -144,13 +144,13 @@ window.Views = window.Views || {};
           '<section class="border-y border-slate-200/70 bg-white">' +
             '<div class="max-w-7xl mx-auto px-5 lg:px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-[12.5px] font-medium text-slate-600">' +
               [
-                ['shield-check', 'Data tersinkron di cloud'],
-                ['wallet', 'Gratis untuk mulai'],
-                ['smartphone', 'Ramah mobile & desktop'],
-                ['languages', 'Bahasa Indonesia']
-              ].map(([ic, label]) =>
+                ['shield-check', 'bg-brand-50 text-brand-600', 'Data tersinkron di cloud'],
+                ['wallet', 'bg-amber-50 text-amber-600', 'Gratis untuk mulai'],
+                ['smartphone', 'bg-emerald-50 text-emerald-600', 'Ramah mobile & desktop'],
+                ['languages', 'bg-sky-50 text-sky-600', 'Bahasa Indonesia']
+              ].map(([ic, tone, label]) =>
                 '<div class="flex items-center gap-2.5">' +
-                  '<span class="w-7 h-7 rounded-lg bg-slate-50 text-slate-500 grid place-items-center shrink-0">' + U.icon(ic, 'w-3.5 h-3.5') + '</span>' +
+                  '<span class="w-7 h-7 rounded-lg ' + tone + ' grid place-items-center shrink-0">' + U.icon(ic, 'w-3.5 h-3.5') + '</span>' +
                   '<span>' + label + '</span>' +
                 '</div>'
               ).join('') +
@@ -192,7 +192,7 @@ window.Views = window.Views || {};
                   '</div>' +
                 '</article>' +
 
-                '<article class="reveal lg:col-span-5 rounded-[20px] border border-brand-100 bg-brand-50/70 p-6 sm:p-7" style="transition-delay:60ms">' +
+                '<article class="reveal lg:col-span-5 rounded-[22px] border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-amber-50/70 p-6 sm:p-7" style="transition-delay:60ms">' +
                   '<div class="flex items-start justify-between gap-4">' +
                     '<div>' +
                       '<span class="w-10 h-10 rounded-xl bg-white text-brand-600 grid place-items-center shadow-sm">' + U.icon('percent', 'w-5 h-5') + '</span>' +
@@ -272,7 +272,7 @@ window.Views = window.Views || {};
           '</section>' +
 
           /* HOW IT WORKS */
-          '<section id="cara-kerja" class="py-20 sm:py-24 bg-slate-50/70 border-y border-slate-200/60 scroll-mt-20">' +
+          '<section id="cara-kerja" class="py-20 sm:py-24 bg-[#faf8ff] border-y border-slate-200/60 scroll-mt-20">' +
             '<div class="max-w-7xl mx-auto px-5 lg:px-8">' +
               '<div class="max-w-2xl reveal">' +
                 '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-[-0.025em] text-slate-950 text-balance">Tiga langkah, harga selesai.</h2>' +
@@ -280,13 +280,13 @@ window.Views = window.Views || {};
               '</div>' +
               '<div class="mt-10 grid md:grid-cols-3 gap-8 md:gap-6">' +
                 [
-                  ['01', 'Masukkan biaya', 'Catat modal, kemasan, biaya operasional, ongkir, dan komisi marketplace Anda.'],
-                  ['02', 'Tentukan target', 'Pilih target keuntungan dalam nominal atau persentase margin. Harga jual langsung muncul.'],
-                  ['03', 'Simpan & pantau', 'Simpan produk, bandingkan margin, dan ekspor laporan saat dibutuhkan.']
-                ].map(([n, t, d], i) =>
+                  ['01', 'Masukkan biaya', 'Catat modal, kemasan, biaya operasional, ongkir, dan komisi marketplace Anda.', 'bg-brand-50 text-brand-600 border-brand-100'],
+                  ['02', 'Tentukan target', 'Pilih target keuntungan dalam nominal atau persentase margin. Harga jual langsung muncul.', 'bg-amber-50 text-amber-600 border-amber-100'],
+                  ['03', 'Simpan & pantau', 'Simpan produk, bandingkan margin, dan ekspor laporan saat dibutuhkan.', 'bg-emerald-50 text-emerald-600 border-emerald-100']
+                ].map(([n, t, d, tone], i) =>
                   '<div class="reveal relative" style="transition-delay:' + (i * 70) + 'ms">' +
                     '<div class="flex items-center gap-3">' +
-                      '<span class="w-9 h-9 rounded-full bg-white border border-slate-200 text-[11px] font-extrabold text-brand-600 grid place-items-center num">' + n + '</span>' +
+                      '<span class="w-9 h-9 rounded-full border text-[11px] font-extrabold ' + tone + ' grid place-items-center num">' + n + '</span>' +
                       (i < 2 ? '<span class="hidden md:block h-px flex-1 bg-slate-200"></span>' : '') +
                     '</div>' +
                     '<h3 class="mt-4 text-[17px] font-bold tracking-tight text-slate-900">' + t + '</h3>' +
@@ -389,7 +389,7 @@ window.Views = window.Views || {};
           '</section>' +
 
           /* FAQ */
-          '<section id="faq" class="py-20 sm:py-24 bg-slate-50/70 border-y border-slate-200/60 scroll-mt-20">' +
+          '<section id="faq" class="py-20 sm:py-24 bg-[#faf8ff] border-y border-slate-200/60 scroll-mt-20">' +
             '<div class="max-w-3xl mx-auto px-5 lg:px-8">' +
               '<div class="reveal">' +
                 '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-[-0.025em] text-slate-950 text-balance">Pertanyaan yang sering muncul.</h2>' +
@@ -442,7 +442,7 @@ window.Views = window.Views || {};
               '<p class="mt-3 text-[12.5px] text-slate-500 leading-6 max-w-[32ch]">Alat bantu hitung harga dan kelola keuntungan untuk usaha mikro, kecil, dan menengah.</p>' +
             '</div>' +
             '<div>' +
-              '<p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">Produk</p>' +
+              '<p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">Produk</p>' +
               '<div class="mt-3 space-y-2 text-[12.5px] text-slate-500">' +
                 '<button data-action="scroll" data-target="fitur" class="block hover:text-slate-900">Fitur</button>' +
                 '<button data-action="scroll" data-target="harga" class="block hover:text-slate-900">Harga</button>' +
@@ -450,7 +450,7 @@ window.Views = window.Views || {};
               '</div>' +
             '</div>' +
             '<div>' +
-              '<p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">Akun</p>' +
+              '<p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">Akun</p>' +
               '<div class="mt-3 space-y-2 text-[12.5px] text-slate-500">' +
                 '<a href="#/masuk" class="block hover:text-slate-900">Masuk</a>' +
                 '<a href="#/daftar" class="block hover:text-slate-900">Daftar</a>' +
@@ -458,7 +458,7 @@ window.Views = window.Views || {};
               '</div>' +
             '</div>' +
             '<div>' +
-              '<p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400">Bantuan</p>' +
+              '<p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">Bantuan</p>' +
               '<div class="mt-3 space-y-2 text-[12.5px] text-slate-500">' +
                 '<a href="' + (logged ? '#/app/bantuan' : '#/daftar') + '" class="block hover:text-slate-900">Pusat Bantuan</a>' +
                 '<a href="mailto:halo@hargaumkm.id" class="block hover:text-slate-900">halo@hargaumkm.id</a>' +
@@ -467,7 +467,7 @@ window.Views = window.Views || {};
             '</div>' +
           '</div>' +
           '<div class="border-t border-slate-100">' +
-            '<div class="max-w-7xl mx-auto px-5 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-400">' +
+            '<div class="max-w-7xl mx-auto px-5 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500">' +
               '<span>© 2026 HargaUMKM. Semua hak dilindungi.</span>' +
               '<span>Dibuat untuk UMKM Indonesia · Versi demo</span>' +
             '</div>' +

@@ -54,15 +54,16 @@ window.UI = (function () {
     if (premium) {
       const since = data.user.premiumSince ? U.dateShort(data.user.premiumSince) : 'hari ini';
       return (
-        '<div class="rounded-2xl p-4 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#1d4ed8 0%,#0b1b3a 100%)">' +
-          '<div class="absolute -right-6 -top-6 w-20 h-20 rounded-full bg-white/10"></div>' +
+        '<div class="rounded-2xl p-4 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#4f46e5 0%,#0d9488 52%,#141a2e 100%)">' +
+          '<div class="absolute -right-6 -top-6 w-20 h-20 rounded-full bg-amber-300/20 blur-sm"></div>' +
+          '<div class="absolute -left-8 -bottom-10 w-24 h-24 rounded-full bg-white/10"></div>' +
           '<div class="relative">' +
             '<div class="flex items-center gap-2">' +
               U.icon('crown', 'w-4 h-4 text-amber-300') +
-              '<span class="text-[10px] font-bold tracking-[0.12em] text-blue-100">PREMIUM AKTIF</span>' +
+              '<span class="text-[10px] font-bold tracking-[0.12em] text-indigo-100">PREMIUM AKTIF</span>' +
             '</div>' +
             '<p class="text-[13px] font-semibold mt-2">Semua fitur terbuka</p>' +
-            '<p class="text-[11px] text-blue-200/80 mt-0.5">Sejak ' + U.esc(since) + '</p>' +
+            '<p class="text-[11px] text-teal-100/80 mt-0.5">Sejak ' + U.esc(since) + '</p>' +
             '<button data-action="nav" data-path="#/app/pengaturan?tab=keanggotaan" class="mt-3 w-full text-[12px] font-semibold bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg py-1.5 transition">Kelola paket</button>' +
           '</div>' +
         '</div>'
@@ -100,10 +101,10 @@ window.UI = (function () {
     ).join('');
 
     return (
-      '<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[264px] bg-white border-r border-slate-200 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">' +
+      '<aside id="sidebar" class="app-sidebar fixed inset-y-0 left-0 z-50 w-[264px] bg-white border-r border-slate-200 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">' +
         '<div class="h-16 px-4 flex items-center justify-between border-b border-slate-100 shrink-0">' +
           '<a href="#/app/beranda" class="flex items-center gap-2.5">' +
-            '<span class="grid place-items-center w-9 h-9 rounded-xl bg-brand-600 text-white shadow-sm">' + U.icon('trending-up', 'w-[18px] h-[18px]') + '</span>' +
+            '<span class="logo-mark grid place-items-center w-9 h-9 rounded-xl text-white shadow-sm">' + U.icon('trending-up', 'w-[18px] h-[18px]') + '</span>' +
             '<span class="font-extrabold tracking-tight text-[17px] text-slate-900">Harga<span class="text-brand-600">UMKM</span></span>' +
           '</a>' +
           '<button class="lg:hidden icon-btn !w-9 !h-9" data-action="close-menu" aria-label="Tutup menu">' + U.icon('x', 'w-4 h-4') + '</button>' +
@@ -130,7 +131,7 @@ window.UI = (function () {
 
   function topbar(title, data) {
     return (
-      '<header class="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-slate-200/80 no-print">' +
+      '<header class="app-topbar sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-slate-200/80 no-print">' +
         '<div class="h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-3">' +
           '<button class="lg:hidden icon-btn" data-action="open-menu" aria-label="Buka menu">' + U.icon('menu', 'w-5 h-5') + '</button>' +
           '<div class="min-w-0">' +
@@ -168,7 +169,7 @@ window.UI = (function () {
 
   function shell(active, title, content, data) {
     return (
-      '<div class="min-h-screen bg-slate-50">' +
+      '<div class="app-shell min-h-screen">' +
         sidebar(active, data) +
         '<div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden" data-action="close-menu"></div>' +
         '<div class="lg:pl-[264px] min-h-screen flex flex-col">' +

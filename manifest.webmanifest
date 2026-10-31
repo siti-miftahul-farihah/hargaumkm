@@ -1,0 +1,19 @@
+{
+  "name": "HargaUMKM — Hitung Harga Jual, Raih Keuntungan",
+  "short_name": "HargaUMKM",
+  "description": "Kalkulator harga jual dan pengelola keuangan untuk UMKM Indonesia.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7fb",
+  "theme_color": "#4f46e5",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

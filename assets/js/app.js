@@ -57,9 +57,9 @@ window.App = (function () {
       const appEl = document.getElementById('app');
       if (appEl) {
         appEl.innerHTML =
-          '<div class="min-h-[100dvh] grid place-items-center bg-slate-50 px-5">' +
+          '<div class="app-shell min-h-[100dvh] grid place-items-center px-5">' +
             '<div class="text-center">' +
-              '<div class="w-10 h-10 rounded-xl bg-brand-600 text-white grid place-items-center mx-auto animate-pulse">' +
+              '<div class="logo-mark w-10 h-10 rounded-xl text-white grid place-items-center mx-auto animate-pulse">' +
                 U.icon('trending-up', 'w-5 h-5') +
               '</div>' +
               '<p class="mt-3 text-[12.5px] font-medium text-slate-500">Memuat akun Anda...</p>' +
