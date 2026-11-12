@@ -168,8 +168,9 @@ window.UI = (function () {
   }
 
   function shell(active, title, content, data) {
+    const pageClass = active ? ' page-' + active : '';
     return (
-      '<div class="app-shell min-h-screen">' +
+      '<div class="app-shell min-h-screen' + pageClass + '">' +
         sidebar(active, data) +
         '<div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden" data-action="close-menu"></div>' +
         '<div class="lg:pl-[264px] min-h-screen flex flex-col">' +
