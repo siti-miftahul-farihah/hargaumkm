@@ -25,6 +25,20 @@ window.U = (function () {
     return Number.isFinite(n) ? n : 0;
   };
 
+  /* Nominal Rupiah disimpan sebagai digit murni, ditampilkan dengan pemisah ribuan. */
+  const toMoney = (v) => {
+    if (typeof v === 'number') {
+      return Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0;
+    }
+    const digits = String(v == null ? '' : v).replace(/\D/g, '');
+    return digits ? parseInt(digits, 10) : 0;
+  };
+
+  const money = (v) => {
+    if (v === '' || v == null) return '';
+    return idr.format(toMoney(v));
+  };
+
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
   const esc = (s) =>
@@ -112,7 +126,7 @@ window.U = (function () {
     if (!root) return;
     root.innerHTML =
       '<div class="modal-backdrop" data-modal-backdrop>' +
-      '<div class="modal-panel ' + (o.size || 'max-w-lg') + '" role="dialog" aria-modal="true" aria-label="' +
+      '<div class="modal-panel ' + (o.size || 'max-w-lg') + ' ' + (o.className || '') + '" role="dialog" aria-modal="true" aria-label="' +
       esc(o.label || 'Dialog') + '">' + html + '</div>' +
       '</div>';
     document.body.style.overflow = 'hidden';
@@ -179,7 +193,7 @@ window.U = (function () {
   };
 
   return {
-    number, rupiah, compact, pct, toNum, clamp, esc, dateShort, dateLong, dateTime,
+    number, rupiah, compact, pct, toNum, toMoney, money, clamp, esc, dateShort, dateLong, dateTime,
     timeAgo, uid, initials, icon, refreshIcons, toast, openModal, closeModal,
     confirm, runConfirm, formError
   };

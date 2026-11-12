@@ -88,6 +88,51 @@ window.Calc = (function () {
     };
   }
 
+  /**
+   * Kalkulator batch sederhana untuk halaman Hitung Harga Jual.
+   * Semua komponen biaya adalah total satu kali produksi (satu batch).
+   * Rumus: total biaya = modal + kemasan + operasional + ongkir.
+   * Harga jual total = total biaya + target keuntungan total.
+   */
+  function batch(input) {
+    const src = input || {};
+    const money = (v) => {
+      const digits = String(v == null ? '' : v).replace(/\D/g, '');
+      return digits ? parseInt(digits, 10) : 0;
+    };
+    const modal = money(src.modal);
+    const packaging = money(src.packaging);
+    const operational = money(src.operational);
+    const shipping = money(src.shipping);
+    const targetProfit = money(src.targetProfitTotal);
+    const productionQty = Math.max(0, N(src.productionQty));
+    const totalCost = modal + packaging + operational + shipping;
+    const totalPrice = totalCost + targetProfit;
+    const hasQty = productionQty > 0;
+    const unitCost = hasQty ? totalCost / productionQty : 0;
+    const unitPrice = hasQty ? totalPrice / productionQty : 0;
+    const unitProfit = hasQty ? targetProfit / productionQty : 0;
+    const margin = totalPrice > 0 ? (targetProfit / totalPrice) * 100 : 0;
+
+    return {
+      ok: true,
+      modal,
+      packaging,
+      operational,
+      shipping,
+      productionQty,
+      targetProfit,
+      totalCost,
+      totalPrice,
+      unitCost,
+      unitPrice,
+      unitProfit,
+      hpp: unitCost,
+      hasQty,
+      margin
+    };
+  }
+
   /** Simulasi harga setelah diskon. */
   function discount(product, pctValue) {
     const d = Math.min(100, Math.max(0, N(pctValue)));
@@ -158,5 +203,5 @@ window.Calc = (function () {
     };
   }
 
-  return { price, discount, maxDiscount, N };
+  return { price, batch, discount, maxDiscount, N };
 })();

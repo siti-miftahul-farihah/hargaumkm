@@ -8,6 +8,11 @@ window.Views = window.Views || {};
     return { label: 'Tipis', cls: 'badge-red' };
   };
 
+  const productMeta = (p) => {
+    const qty = Number(p.productionQty) || 0;
+    return (qty > 0 ? U.number(qty) + ' unit · ' : '') + U.dateShort(p.createdAt);
+  };
+
   const iconBtn = (action, id, iconName, label, extra) =>
     '<button class="icon-btn !w-8 !h-8 ' + (extra || '') + '" data-action="' + action + '" data-id="' + U.esc(id) + '" title="' + label + '" aria-label="' + label + '">' +
       U.icon(iconName, 'w-4 h-4') +
@@ -16,7 +21,6 @@ window.Views = window.Views || {};
   Views.products = function () {
     const data = App.data;
     const products = data.products.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean))).sort();
     const premium = data.user.premium;
     const atLimit = !premium && products.length >= UI.LIMITS.products;
 
@@ -45,12 +49,12 @@ window.Views = window.Views || {};
     const rows = products.map((p) => {
       const t = tone(Number(p.margin) || 0);
       return (
-        '<tr data-product-row data-name="' + U.esc(String(p.name).toLowerCase()) + '" data-category="' + U.esc(p.category || '') + '">' +
+        '<tr data-product-row data-name="' + U.esc(String(p.name).toLowerCase()) + '">' +
           '<td>' +
             '<div class="flex items-center gap-3">' +
               '<span class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 grid place-items-center shrink-0">' + U.icon('package', 'w-4 h-4') + '</span>' +
               '<div class="min-w-0"><p class="font-semibold text-slate-800 truncate max-w-[210px]">' + U.esc(p.name) + '</p>' +
-              '<p class="text-[11px] text-slate-400">' + U.esc(p.category || 'Tanpa kategori') + ' · ' + U.dateShort(p.createdAt) + '</p></div>' +
+              '<p class="text-[11px] text-slate-400">' + U.esc(productMeta(p)) + '</p></div>' +
             '</div>' +
           '</td>' +
           '<td class="num font-semibold text-slate-800">' + U.rupiah(p.price) + '</td>' +
@@ -71,17 +75,17 @@ window.Views = window.Views || {};
     const cards = products.map((p) => {
       const t = tone(Number(p.margin) || 0);
       return (
-        '<div data-product-row data-name="' + U.esc(String(p.name).toLowerCase()) + '" data-category="' + U.esc(p.category || '') + '" class="card p-4">' +
+        '<div data-product-row data-name="' + U.esc(String(p.name).toLowerCase()) + '" class="card p-4">' +
           '<div class="flex items-start gap-3">' +
             '<span class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 grid place-items-center shrink-0">' + U.icon('package', 'w-5 h-5') + '</span>' +
             '<div class="min-w-0 flex-1">' +
               '<p class="font-semibold text-slate-800 truncate">' + U.esc(p.name) + '</p>' +
-              '<p class="text-[11px] text-slate-400">' + U.esc(p.category || 'Tanpa kategori') + ' · ' + U.dateShort(p.createdAt) + '</p>' +
+              '<p class="text-[11px] text-slate-400">' + U.esc(productMeta(p)) + '</p>' +
             '</div>' +
             '<span class="badge ' + t.cls + '">' + U.pct(p.margin) + '</span>' +
           '</div>' +
           '<div class="mt-3.5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50/80 p-3">' +
-            '<div><p class="text-[10px] text-slate-400">Harga jual</p><p class="text-[13px] font-bold text-slate-800 num mt-0.5">' + U.rupiah(p.price) + '</p></div>' +
+            '<div><p class="text-[10px] text-slate-400">Harga jual / unit</p><p class="text-[13px] font-bold text-slate-800 num mt-0.5">' + U.rupiah(p.price) + '</p></div>' +
             '<div><p class="text-[10px] text-slate-400">Keuntungan</p><p class="text-[13px] font-bold text-emerald-600 num mt-0.5">' + U.rupiah(p.profit) + '</p></div>' +
           '</div>' +
           '<div class="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-2.5">' +
@@ -110,17 +114,13 @@ window.Views = window.Views || {};
               '<input id="product-search" class="input !pl-9" type="search" placeholder="Cari nama produk..." data-product-search autocomplete="off">' +
             '</div>' +
             '<div class="flex items-center gap-2 sm:ml-auto">' +
-              '<select id="product-category" class="input !w-auto min-w-[150px]" data-product-category aria-label="Filter kategori">' +
-                '<option value="all">Semua kategori</option>' +
-                categories.map((c) => '<option value="' + U.esc(c) + '">' + U.esc(c) + '</option>').join('') +
-              '</select>' +
               '<span id="product-count" class="text-[11.5px] text-slate-400 whitespace-nowrap">' + products.length + ' produk</span>' +
             '</div>' +
           '</div>' +
 
           '<div class="hidden md:block overflow-x-auto">' +
             '<table class="tbl min-w-[760px]">' +
-              '<thead><tr><th>Produk</th><th>Harga Jual</th><th>Keuntungan</th><th>Margin</th><th>Total Biaya</th><th class="!text-right">Aksi</th></tr></thead>' +
+              '<thead><tr><th>Produk</th><th>Harga Jual</th><th>Keuntungan</th><th>Margin</th><th>HPP / Unit</th><th class="!text-right">Aksi</th></tr></thead>' +
               '<tbody id="product-rows">' + rows + '</tbody>' +
             '</table>' +
           '</div>' +
@@ -129,7 +129,7 @@ window.Views = window.Views || {};
           '<div id="product-no-match" class="hidden p-10 text-center">' +
             '<div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-400 grid place-items-center mx-auto">' + U.icon('search-x', 'w-5 h-5') + '</div>' +
             '<p class="mt-3 text-[13px] font-semibold text-slate-600">Produk tidak ditemukan</p>' +
-            '<p class="text-[12px] text-slate-400 mt-1">Coba kata kunci atau kategori lain.</p>' +
+            '<p class="text-[12px] text-slate-400 mt-1">Coba kata kunci lain.</p>' +
           '</div>' +
         '</div>' +
 
@@ -140,13 +140,11 @@ window.Views = window.Views || {};
 
   Views.filterProducts = function () {
     const q = (document.getElementById('product-search') || {}).value || '';
-    const cat = (document.getElementById('product-category') || {}).value || 'all';
     const needle = q.toLowerCase().trim();
 
     document.querySelectorAll('[data-product-row]').forEach((row) => {
       const matchName = !needle || (row.getAttribute('data-name') || '').indexOf(needle) !== -1;
-      const matchCat = cat === 'all' || row.getAttribute('data-category') === cat;
-      row.classList.toggle('hidden', !(matchName && matchCat));
+      row.classList.toggle('hidden', !matchName);
     });
 
     /* Tabel desktop dan kartu mobile memuat produk yang sama — hitung satu per produk. */
@@ -164,18 +162,30 @@ window.Views = window.Views || {};
     if (!p) return U.toast('Produk tidak ditemukan.', 'error');
 
     const t = tone(Number(p.margin) || 0);
-    const commissionLabel = p.commissionType === 'nominal'
-      ? 'Komisi marketplace'
-      : 'Komisi marketplace (' + U.pct(p.commissionValue, 1) + ')';
-    const targetLabel = p.targetType === 'nominal'
-      ? 'Target keuntungan ' + U.rupiah(p.targetValue)
-      : 'Target margin ' + U.pct(p.targetValue);
+    const qty = Number(p.productionQty) || 0;
+    const commission = Number(p.commission) || 0;
+    const batchCost = (Number(p.modal) || 0) + (Number(p.packaging) || 0) +
+      (Number(p.operational) || 0) + (Number(p.shipping) || 0);
+    const materials = Array.isArray(p.materials) ? p.materials : [];
+    const targetLabel = p.targetProfitTotal != null
+      ? 'Target keuntungan batch ' + U.rupiah(p.targetProfitTotal)
+      : (p.targetType === 'nominal'
+        ? 'Target keuntungan ' + U.rupiah(p.targetValue)
+        : 'Target margin ' + U.pct(p.targetValue));
+    const meta = (qty > 0 ? U.number(qty) + ' unit per batch · ' : '') + 'disimpan ' + U.dateShort(p.createdAt);
 
     const row = (label, value, cls) =>
       '<div class="flex items-center justify-between gap-3 py-2">' +
         '<span class="text-[12.5px] text-slate-500">' + label + '</span>' +
         '<span class="text-[12.5px] font-semibold num ' + (cls || 'text-slate-700') + '">' + value + '</span>' +
       '</div>';
+
+    const materialRows = materials.length
+      ? '<div class="mt-5"><p class="text-[10.5px] font-bold tracking-[0.08em] text-slate-400 mb-1">RINCIAN BAHAN</p>' +
+          '<div class="divide-y divide-slate-100">' +
+            materials.map((m) => row(U.esc(m.name || 'Bahan'), U.rupiah(m.price))).join('') +
+          '</div></div>'
+      : '';
 
     U.openModal(
       '<div class="p-6 sm:p-7">' +
@@ -185,7 +195,7 @@ window.Views = window.Views || {};
             '<div class="min-w-0">' +
               '<p class="text-[10px] font-bold tracking-[0.1em] text-slate-400">DETAIL PRODUK</p>' +
               '<h3 class="text-lg font-bold tracking-tight text-slate-900 truncate">' + U.esc(p.name) + '</h3>' +
-              '<p class="text-[11.5px] text-slate-400 mt-0.5">' + U.esc(p.category || 'Tanpa kategori') + ' · disimpan ' + U.dateShort(p.createdAt) + '</p>' +
+              '<p class="text-[11.5px] text-slate-400 mt-0.5">' + U.esc(meta) + '</p>' +
             '</div>' +
           '</div>' +
           '<button class="icon-btn !w-9 !h-9" data-action="close-modal" aria-label="Tutup">' + U.icon('x', 'w-4 h-4') + '</button>' +
@@ -193,7 +203,7 @@ window.Views = window.Views || {};
 
         '<div class="mt-5 rounded-2xl bg-slate-50 border border-slate-100 p-4 flex items-end justify-between gap-3">' +
           '<div>' +
-            '<p class="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">Harga jual</p>' +
+            '<p class="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">Harga jual per unit</p>' +
             '<p class="text-[28px] font-extrabold tracking-tight text-slate-900 num leading-none mt-1">' + U.rupiah(p.price) + '</p>' +
             '<p class="text-[11.5px] text-slate-400 mt-1">' + targetLabel + '</p>' +
           '</div>' +
@@ -203,21 +213,27 @@ window.Views = window.Views || {};
         '<div class="mt-5">' +
           '<p class="text-[10.5px] font-bold tracking-[0.08em] text-slate-400 mb-1">RINCIAN BIAYA</p>' +
           '<div class="divide-y divide-slate-100">' +
-            row('Modal produk', U.rupiah(p.modal)) +
-            row('Biaya kemasan', U.rupiah(p.packaging)) +
-            row('Biaya operasional', U.rupiah(p.operational)) +
-            row('Ongkos kirim', U.rupiah(p.shipping)) +
-            row(commissionLabel, U.rupiah(p.commission)) +
+            row(qty > 0 ? 'Modal bahan (batch)' : 'Modal produk', U.rupiah(p.modal)) +
+            row(qty > 0 ? 'Biaya kemasan (batch)' : 'Biaya kemasan', U.rupiah(p.packaging)) +
+            row(qty > 0 ? 'Biaya operasional (batch)' : 'Biaya operasional', U.rupiah(p.operational)) +
+            row(qty > 0 ? 'Ongkir / lainnya (batch)' : 'Ongkos kirim', U.rupiah(p.shipping)) +
+            (commission > 0 ? row('Komisi marketplace', U.rupiah(commission)) : '') +
+            (qty > 0 ? row('Jumlah hasil produksi', U.number(qty) + ' unit') : '') +
           '</div>' +
           '<div class="mt-1 pt-2 border-t border-slate-200 flex items-center justify-between">' +
-            '<span class="text-[12.5px] font-semibold text-slate-700">Total biaya</span>' +
-            '<span class="text-[13px] font-bold text-slate-900 num">' + U.rupiah(p.totalCost) + '</span>' +
+            '<span class="text-[12.5px] font-semibold text-slate-700">' + (qty > 0 ? 'Total biaya batch' : 'Total biaya') + '</span>' +
+            '<span class="text-[13px] font-bold text-slate-900 num">' + U.rupiah(qty > 0 ? batchCost : p.totalCost) + '</span>' +
           '</div>' +
+          (qty > 0
+            ? row('HPP per unit', U.rupiah(p.totalCost), 'text-slate-900')
+            : '') +
         '</div>' +
+
+        materialRows +
 
         '<div class="mt-4 grid grid-cols-2 gap-3">' +
           '<div class="rounded-xl bg-emerald-50/70 border border-emerald-100 p-3.5">' +
-            '<p class="text-[10.5px] text-emerald-700/70">Keuntungan bersih</p>' +
+            '<p class="text-[10.5px] text-emerald-700/70">' + (qty > 0 ? 'Keuntungan per unit' : 'Keuntungan bersih') + '</p>' +
             '<p class="text-[16px] font-extrabold text-emerald-700 num mt-0.5">' + U.rupiah(p.profit) + '</p>' +
           '</div>' +
           '<div class="rounded-xl bg-white border border-slate-200 p-3.5">' +

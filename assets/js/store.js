@@ -12,6 +12,8 @@ window.Store = (function () {
   let recoveryCallback = null;
   let recoveryPending = false;
   let saveChain = Promise.resolve();
+  let usesNewTables = null;
+  let schemaVersion = null;
 
   const normalize = (email) => String(email || '').trim().toLowerCase();
   const digits = (value) => String(value || '').replace(/\D/g, '');
@@ -134,7 +136,17 @@ window.Store = (function () {
     const d = isObject(data) ? data : {};
     d.user = Object.assign(blank(email).user, isObject(d.user) ? d.user : {});
     d.user.email = normalize(email || d.user.email);
-    d.products = Array.isArray(d.products) ? d.products : [];
+    d.products = (Array.isArray(d.products) ? d.products : []).map(function (item) {
+      const product = Object.assign({}, item || {});
+      delete product.category;
+      const qty = Number(product.productionQty);
+      product.productionQty = qty > 0 ? qty : 1;
+      product.targetProfitTotal = product.targetProfitTotal == null
+        ? Number(product.profit) || 0
+        : Number(product.targetProfitTotal) || 0;
+      product.materials = Array.isArray(product.materials) ? product.materials : [];
+      return product;
+    });
     d.history = Array.isArray(d.history) ? d.history : [];
     d.settings = Object.assign(blank(email).settings, isObject(d.settings) ? d.settings : {});
     return d;
@@ -190,6 +202,9 @@ window.Store = (function () {
     return Object.assign({}, def, {
       id,
       createdAt,
+      productionQty: 1,
+      targetProfitTotal: calc.profit,
+      materials: [],
       price: calc.price,
       costBase: calc.costBase,
       commission: calc.commission,
@@ -202,31 +217,31 @@ window.Store = (function () {
   function seed(d) {
     const products = [
       makeProduct({
-        name: 'Kaos Polos Premium', category: 'Fashion',
+        name: 'Kaos Polos Premium',
         modal: 42000, packaging: 2500, operational: 4000, shipping: 0,
         commissionType: 'percent', commissionValue: 8,
         targetType: 'percent', targetValue: 35, roundTo: 500
       }, 'p_kaos', daysAgo(1)),
       makeProduct({
-        name: 'Kopi Arabika 250g', category: 'Makanan & Minuman',
+        name: 'Kopi Arabika 250g',
         modal: 38000, packaging: 3500, operational: 3000, shipping: 12000,
         commissionType: 'percent', commissionValue: 10,
         targetType: 'percent', targetValue: 30, roundTo: 500
       }, 'p_kopi', daysAgo(3)),
       makeProduct({
-        name: 'Tas Kanvas Handmade', category: 'Kriya',
+        name: 'Tas Kanvas Handmade',
         modal: 65000, packaging: 5000, operational: 6000, shipping: 15000,
         commissionType: 'percent', commissionValue: 5,
         targetType: 'nominal', targetValue: 25000, roundTo: 1000
       }, 'p_tas', daysAgo(6)),
       makeProduct({
-        name: 'Sambal Bawang 200ml', category: 'Makanan & Minuman',
+        name: 'Sambal Bawang 200ml',
         modal: 18000, packaging: 2500, operational: 2500, shipping: 10000,
         commissionType: 'percent', commissionValue: 10,
         targetType: 'percent', targetValue: 25, roundTo: 1000
       }, 'p_sambal', daysAgo(9)),
       makeProduct({
-        name: 'Hijab Voal Motif', category: 'Fashion',
+        name: 'Hijab Voal Motif',
         modal: 28000, packaging: 2000, operational: 3000, shipping: 0,
         commissionType: 'percent', commissionValue: 8,
         targetType: 'percent', targetValue: 40, roundTo: 500
@@ -282,6 +297,21 @@ window.Store = (function () {
     return code === 'PGRST202' || /could not find the function|function.*does not exist/i.test(message);
   }
 
+  async function hasCurrentSchema() {
+    if (schemaVersion !== null) return schemaVersion >= 2;
+
+    const { data, error } = await client.rpc('get_hargaumkm_schema_version');
+    if (error) {
+      if (isMissingFunction(error)) return false;
+      throw error;
+    }
+
+    const version = Number(data) || 0;
+    if (version < 2) return false;
+    schemaVersion = version;
+    return true;
+  }
+
   async function getUser() {
     init();
     const { data, error } = await client.auth.getSession();
@@ -291,6 +321,16 @@ window.Store = (function () {
   }
 
   async function writeRow(user, data) {
+    if (usesNewTables === null) {
+      const probe = await client.rpc('get_hargaumkm_data');
+      usesNewTables = !probe.error;
+      if (probe.error && !isMissingFunction(probe.error)) throw probe.error;
+    }
+
+    if (usesNewTables && !(await hasCurrentSchema())) {
+      throw new Error('Skema database HargaUMKM perlu diperbarui. Jalankan ulang supabase/schema.sql di SQL Editor Supabase agar jumlah produksi, target keuntungan batch, dan rincian bahan tersimpan.');
+    }
+
     const { error } = await client.rpc('save_hargaumkm_data', { payload: data });
 
     if (!error) return;
@@ -347,6 +387,7 @@ window.Store = (function () {
   async function fetchPayload(user) {
     const rpc = await client.rpc('get_hargaumkm_data');
     const hasNewTables = !rpc.error;
+    usesNewTables = hasNewTables;
 
     if (rpc.error && !isMissingFunction(rpc.error)) throw rpc.error;
 

@@ -54,7 +54,7 @@ window.Views = window.Views || {};
             '<div class="flex items-center gap-3">' +
               '<span class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 grid place-items-center shrink-0">' + U.icon('package', 'w-4 h-4') + '</span>' +
               '<div class="min-w-0"><p class="font-semibold text-slate-800 truncate max-w-[190px]">' + U.esc(p.name) + '</p>' +
-              '<p class="text-[11px] text-slate-400">' + U.esc(p.category || 'Tanpa kategori') + '</p></div>' +
+              '<p class="text-[11px] text-slate-400">' + U.esc((Number(p.productionQty) || 0) > 0 ? U.number(p.productionQty) + ' unit · ' + U.dateShort(p.createdAt) : U.dateShort(p.createdAt)) + '</p></div>' +
             '</div>' +
           '</td>' +
           '<td class="num font-semibold text-slate-700">' + U.rupiah(p.price) + '</td>' +

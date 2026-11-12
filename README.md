@@ -8,15 +8,16 @@ Kalkulator harga jual dan pengelola keuangan untuk UMKM Indonesia. Aplikasi web 
 - Email: `demo@hargaumkm.id`
 - Kata sandi: `demo123`
 
-Akun demo berstatus Premium dengan 5 produk dan 4 riwayat contoh. Data akun demo tersimpan terpusat di Supabase, jadi dapat dibuka dari perangkat mana pun.
+Akun demo berstatus Premium dengan produk dan riwayat contoh. Data akun demo tersimpan terpusat di Supabase, jadi dapat dibuka dari perangkat mana pun.
 
 ## Fitur
 
 - Landing page dan kalkulator harga interaktif
 - Registrasi, login, akun demo, dan lupa kata sandi
 - Dashboard ringkasan usaha
-- Kelola produk: tambah, lihat detail, edit, hapus, cari, dan filter
-- Hitung modal, biaya kemasan, operasional, ongkir, komisi marketplace, target margin, dan pembulatan harga
+- Kelola produk: tambah, lihat detail, edit, hapus, dan cari
+- Hitung HPP batch dengan modal bahan, jumlah hasil produksi, biaya kemasan, operasional, ongkir, dan target keuntungan total
+- Rincian bahan mentah/resep dengan total modal otomatis
 - Simulasi promo dan kalkulator batas diskon aman (Premium)
 - Perbandingan keuntungan antar produk (Premium)
 - Riwayat simulasi
@@ -53,7 +54,7 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 | --- | --- |
 | `hargaumkm_profiles` | Satu baris per pengguna: nama, email, telepon, usaha, kota, status premium. |
 | `hargaumkm_settings` | Satu baris per pengguna: preferensi notifikasi, bahasa, dan penanda migrasi. |
-| `hargaumkm_products` | Satu baris per produk: nama, kategori, modal, biaya, margin, harga jual. |
+| `hargaumkm_products` | Satu baris per produk: nama, modal bahan, jumlah hasil produksi, biaya batch, target keuntungan, rincian bahan, margin, harga jual. |
 | `hargaumkm_history` | Satu baris per riwayat simulasi: produk, harga, untung, margin, diskon. |
 | `hargaumkm_data` | Tabel lama berisi `payload` JSONB. Dipertahankan untuk migrasi otomatis. |
 
@@ -62,7 +63,7 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 1. Buat project di https://supabase.com.
 2. Buka **SQL Editor → New query**.
 3. Salin seluruh isi `supabase/schema.sql`, tempel, lalu klik **Run**.
-   - Jika sebelumnya sudah pernah menjalankan schema lama, jalankan ulang berkas terbaru. Data lama di `hargaumkm_data` tidak dihapus saat schema dijalankan; setelah pengguna masuk, datanya dipindahkan ke tabel baru lalu baris lama dibersihkan.
+   - Jika sebelumnya sudah pernah menjalankan schema lama, jalankan ulang berkas terbaru. Proses ini menambahkan kolom `production_qty`, `target_profit_total`, dan `materials`, serta menghapus kolom `category` yang sudah tidak dipakai. Data lama di `hargaumkm_data` tidak dihapus saat schema dijalankan; setelah pengguna masuk, datanya dipindahkan ke tabel baru lalu baris lama dibersihkan.
 4. Buka **Authentication → Providers → Email** dan pastikan email aktif.
 5. Untuk mempermudah pengujian, matikan **Confirm email** pada **Authentication → Sign In / Providers**.
 6. Buka **Authentication → URL Configuration**, lalu isi:
@@ -97,8 +98,8 @@ Aplikasi memerlukan koneksi internet untuk memuat Tailwind, font, ikon, jsPDF, d
 
 - Akun dikelola oleh Supabase Auth (email dan kata sandi).
 - Profil, pengaturan, produk, dan riwayat disimpan di tabel terpisah: `hargaumkm_profiles`, `hargaumkm_settings`, `hargaumkm_products`, dan `hargaumkm_history`.
-- Aplikasi memakai fungsi database `get_hargaumkm_data()` dan `save_hargaumkm_data()` agar pembacaan/penyimpanan keempat tabel berjalan konsisten.
-- Sebelum schema baru dijalankan, aplikasi otomatis memakai tabel lama `hargaumkm_data`; setelah schema baru tersedia, aplikasi beralih ke tabel terpisah tanpa perlu mengubah frontend lagi.
+- Aplikasi memakai fungsi database `get_hargaumkm_data()`, `save_hargaumkm_data()`, dan `get_hargaumkm_schema_version()` agar pembacaan/penyimpanan keempat tabel berjalan konsisten.
+- Jika versi schema di Supabase masih di bawah `2`, aplikasi menghentikan penyimpanan dan menampilkan pesan agar `supabase/schema.sql` dijalankan ulang. Ini mencegah data batch dan rincian bahan hilang tanpa peringatan.
 - Row Level Security membatasi setiap pengguna agar hanya bisa membaca dan mengubah baris miliknya sendiri di semua tabel.
 - Data tidak lagi disimpan di `localStorage`, sehingga akun dan data dapat dibuka dari perangkat lain.
 - Data lama dari `payload` JSONB dan `localStorage` akan diimpor otomatis ke tabel baru saat pengguna masuk pertama kali. Kata sandi lama tidak dapat dipindahkan, jadi pengguna perlu mendaftar ulang di Supabase Auth.

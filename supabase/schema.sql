@@ -65,11 +65,13 @@ create table if not exists public.hargaumkm_products (
   user_id uuid not null references auth.users(id) on delete cascade,
   id text not null,
   name text not null default '',
-  category text not null default '',
   modal numeric not null default 0,
+  production_qty numeric not null default 1,
   packaging numeric not null default 0,
   operational numeric not null default 0,
   shipping numeric not null default 0,
+  target_profit_total numeric not null default 0,
+  materials jsonb not null default '[]'::jsonb,
   commission_type text not null default 'percent',
   commission_value numeric not null default 0,
   target_type text not null default 'percent',
@@ -86,8 +88,19 @@ create table if not exists public.hargaumkm_products (
   primary key (user_id, id)
 );
 
+-- Migrasi dari versi sebelumnya: kategori tidak lagi dipakai.
+alter table public.hargaumkm_products add column if not exists production_qty numeric not null default 1;
+alter table public.hargaumkm_products add column if not exists target_profit_total numeric not null default 0;
+alter table public.hargaumkm_products add column if not exists materials jsonb not null default '[]'::jsonb;
+
+-- Produk lama disimpan per unit sebelum kalkulator batch ada. Isi target batch
+-- dari keuntungan lama agar form edit tidak kehilangan angka.
+update public.hargaumkm_products
+set target_profit_total = profit
+where target_profit_total = 0 and profit > 0;
+
 comment on table public.hargaumkm_products is
-  'Satu baris per produk milik pengguna HargaUMKM.';
+  'Satu baris per produk milik pengguna HargaUMKM, termasuk jumlah hasil produksi, target keuntungan batch, dan rincian bahan.';
 
 create index if not exists hargaumkm_products_user_idx
   on public.hargaumkm_products (user_id, created_at desc);
@@ -281,11 +294,13 @@ as $$
         select jsonb_agg(jsonb_build_object(
           'id', id,
           'name', name,
-          'category', category,
           'modal', modal,
+          'productionQty', production_qty,
           'packaging', packaging,
           'operational', operational,
           'shipping', shipping,
+          'targetProfitTotal', target_profit_total,
+          'materials', materials,
           'commissionType', commission_type,
           'commissionValue', commission_value,
           'targetType', target_type,
@@ -388,7 +403,8 @@ begin
 
   delete from public.hargaumkm_products where user_id = uid;
   insert into public.hargaumkm_products (
-    user_id, id, name, category, modal, packaging, operational, shipping,
+    user_id, id, name, modal, production_qty, packaging, operational, shipping,
+    target_profit_total, materials,
     commission_type, commission_value, target_type, target_value, round_to,
     price, cost_base, commission, total_cost, profit, margin, created_at
   )
@@ -396,11 +412,13 @@ begin
     uid,
     coalesce(nullif(prod.id, ''), 'p_' || gen_random_uuid()::text),
     coalesce(prod.name, ''),
-    coalesce(prod.category, ''),
     coalesce(prod.modal, 0),
+    greatest(coalesce(prod."productionQty", 1), 1),
     coalesce(prod.packaging, 0),
     coalesce(prod.operational, 0),
     coalesce(prod.shipping, 0),
+    coalesce(prod."targetProfitTotal", 0),
+    coalesce(prod.materials, '[]'::jsonb),
     coalesce(prod."commissionType", 'percent'),
     coalesce(prod."commissionValue", 0),
     coalesce(prod."targetType", 'percent'),
@@ -416,11 +434,13 @@ begin
   from jsonb_to_recordset(coalesce(doc->'products', '[]'::jsonb)) as prod(
     id text,
     name text,
-    category text,
     modal numeric,
+    "productionQty" numeric,
     packaging numeric,
     operational numeric,
     shipping numeric,
+    "targetProfitTotal" numeric,
+    materials jsonb,
     "commissionType" text,
     "commissionValue" numeric,
     "targetType" text,
@@ -464,7 +484,19 @@ begin
 end;
 $$;
 
+-- Penanda versi agar frontend tidak menulis data baru ke skema lama.
+create or replace function public.get_hargaumkm_schema_version()
+returns integer
+language sql
+immutable
+as $$ select 2 $$;
+
 revoke all on function public.get_hargaumkm_data() from public;
 revoke all on function public.save_hargaumkm_data(jsonb) from public;
+revoke all on function public.get_hargaumkm_schema_version() from public;
 grant execute on function public.get_hargaumkm_data() to authenticated;
 grant execute on function public.save_hargaumkm_data(jsonb) to authenticated;
+grant execute on function public.get_hargaumkm_schema_version() to authenticated;
+
+-- Setelah fungsi baru tidak lagi memakai kategori, kolom lama dapat dibuang.
+alter table public.hargaumkm_products drop column if exists category;

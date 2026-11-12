@@ -461,8 +461,20 @@ window.App = (function () {
         case 'save-product':
           Views.saveProduct();
           break;
-        case 'calc-type':
-          Views.setCalcType(el.getAttribute('data-kind'), el.getAttribute('data-value'));
+        case 'open-materials':
+          Views.openMaterialsModal();
+          break;
+        case 'add-material':
+          Views.addMaterial();
+          break;
+        case 'remove-material':
+          Views.removeMaterial(el.getAttribute('data-id'));
+          break;
+        case 'apply-materials':
+          Views.applyMaterials();
+          break;
+        case 'cancel-materials':
+          Views.cancelMaterials();
           break;
         case 'promo-discount':
           Views.promoApply(val);
@@ -522,11 +534,24 @@ window.App = (function () {
     onInput: function (e) {
       const el = e.target;
 
+      if (el.matches('[data-material-field]')) {
+        Views.materialInput(el);
+        return;
+      }
+
       if (el.matches('[data-calc-field]')) {
         if (!this.ui.calc) return;
         const field = el.getAttribute('data-calc-field');
-        this.ui.calc[field] = el.value;
-        if (field !== 'name' && field !== 'category' && el.tagName !== 'SELECT') {
+
+        if (el.hasAttribute('data-money-input')) {
+          const digits = String(el.value || '').replace(/\D/g, '');
+          this.ui.calc[field] = digits;
+          el.value = digits ? U.money(digits) : '';
+        } else {
+          this.ui.calc[field] = el.value;
+        }
+
+        if (field !== 'name' && el.tagName !== 'SELECT') {
           Views.calcUpdate();
         }
         return;
@@ -585,11 +610,6 @@ window.App = (function () {
 
       if (el.matches('[data-report-period]')) {
         Views.setReportPeriod(el.value);
-        return;
-      }
-
-      if (el.matches('[data-product-category]')) {
-        Views.filterProducts();
         return;
       }
 

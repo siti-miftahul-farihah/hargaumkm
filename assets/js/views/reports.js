@@ -92,7 +92,7 @@ window.Views = window.Views || {};
     const rows = items.map((p) =>
       '<tr>' +
         '<td><p class="font-semibold text-slate-800 truncate max-w-[230px]">' + U.esc(p.name) + '</p>' +
-          '<p class="text-[11px] text-slate-400">' + U.esc(p.category || 'Tanpa kategori') + ' · ' + U.dateShort(p.createdAt) + '</p></td>' +
+          '<p class="text-[11px] text-slate-400">' + U.esc((Number(p.productionQty) || 0) > 0 ? U.number(p.productionQty) + ' unit · ' + U.dateShort(p.createdAt) : U.dateShort(p.createdAt)) + '</p></td>' +
         '<td class="num text-slate-700">' + U.rupiah(p.price) + '</td>' +
         '<td class="num text-slate-500">' + U.rupiah(p.totalCost) + '</td>' +
         '<td class="num font-semibold text-emerald-600">' + U.rupiah(p.profit) + '</td>' +
@@ -245,7 +245,7 @@ window.Views = window.Views || {};
       startY: 104,
       head: [['Produk', 'Harga Jual', 'Total Biaya', 'Keuntungan', 'Margin']],
       body: items.map((p) => [
-        p.name + (p.category ? ' (' + p.category + ')' : ''),
+        p.name,
         U.rupiah(p.price),
         U.rupiah(p.totalCost),
         U.rupiah(p.profit),

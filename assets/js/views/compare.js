@@ -3,6 +3,10 @@ window.Views = window.Views || {};
 
 (function () {
   const tone = (m) => (m >= 30 ? 'bg-emerald-500' : m >= 15 ? 'bg-amber-500' : 'bg-red-500');
+  const meta = (p) => {
+    const qty = Number(p.productionQty) || 0;
+    return (qty > 0 ? U.number(qty) + ' unit · ' : '') + U.dateShort(p.createdAt);
+  };
 
   Views.compare = function () {
     if (!App.data.user.premium) {
@@ -51,7 +55,7 @@ window.Views = window.Views || {};
               '<span class="font-semibold text-slate-800 truncate max-w-[190px]">' + U.esc(p.name) + '</span>' +
               (i === 0 ? '<span class="badge badge-green">Tertinggi</span>' : '') +
             '</div>' +
-            '<p class="text-[11px] text-slate-400 mt-0.5">' + U.esc(p.category || 'Tanpa kategori') + '</p>' +
+            '<p class="text-[11px] text-slate-400 mt-0.5">' + U.esc(meta(p)) + '</p>' +
           '</td>' +
           '<td class="num font-semibold text-slate-700">' + U.rupiah(p.price) + '</td>' +
           '<td class="num font-semibold text-emerald-600">' + U.rupiah(p.profit) + '</td>' +
@@ -73,7 +77,7 @@ window.Views = window.Views || {};
           '<div class="flex items-start gap-2.5">' +
             '<span class="w-6 h-6 rounded-lg ' + (i === 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-400') + ' grid place-items-center text-[10.5px] font-bold num shrink-0">' + (i + 1) + '</span>' +
             '<div class="min-w-0 flex-1"><p class="text-[13px] font-semibold text-slate-800 truncate">' + U.esc(p.name) + '</p>' +
-              '<p class="text-[10.5px] text-slate-400">' + U.esc(p.category || 'Tanpa kategori') + '</p></div>' +
+              '<p class="text-[10.5px] text-slate-400">' + U.esc(meta(p)) + '</p></div>' +
             '<span class="text-[12px] font-bold text-slate-700 num">' + U.pct(m) + '</span>' +
           '</div>' +
           '<div class="mt-2.5 h-1.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full rounded-full ' + tone(m) + '" style="width:' + Math.max(3, Math.min(100, (m / maxMargin) * 100)) + '%"></div></div>' +
