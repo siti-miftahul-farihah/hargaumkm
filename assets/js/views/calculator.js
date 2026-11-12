@@ -283,7 +283,7 @@ window.Views = window.Views || {};
           'value="' + U.esc(item.name) + '" placeholder="Nama bahan" autocomplete="off" aria-label="Nama bahan">' +
         '<div class="calc-input-wrap">' +
           '<span class="calc-prefix">Rp</span>' +
-          '<input class="calc-input material-price" type="text" inputmode="numeric" data-material-field="price" ' +
+          '<input class="calc-input calc-input-money material-price" type="text" inputmode="numeric" data-material-field="price" ' +
             'data-material-money data-material-id="' + id + '" value="' + U.esc(U.money(item.price)) + '" ' +
             'placeholder="0" aria-label="Harga bahan">' +
         '</div>' +

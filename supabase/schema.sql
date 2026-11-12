@@ -500,3 +500,6 @@ grant execute on function public.get_hargaumkm_schema_version() to authenticated
 
 -- Setelah fungsi baru tidak lagi memakai kategori, kolom lama dapat dibuang.
 alter table public.hargaumkm_products drop column if exists category;
+
+-- Segarkan cache skema PostgREST agar fungsi baru langsung dikenali aplikasi.
+notify pgrst, 'reload schema';
