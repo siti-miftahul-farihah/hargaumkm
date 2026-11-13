@@ -60,6 +60,7 @@ window.Views = window.Views || {};
       return (
         '<div class="space-y-5">' +
           '<div>' +
+            UI.pageEyebrow('Laporan keuangan') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950">Laporan</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Rekap keuangan usaha berdasarkan produk yang tersimpan.</p>' +
           '</div>' +
@@ -74,12 +75,12 @@ window.Views = window.Views || {};
     }
 
     const summary = [
-      ['Total produk', U.number(t.count), 'Produk pada periode ini', 'package', 'bg-brand-50 text-brand-600'],
-      ['Pendapatan', U.rupiah(t.revenue), 'Nilai jual 1 unit/produk', 'wallet', 'bg-slate-100 text-slate-600'],
-      ['Total biaya', U.rupiah(t.cost), 'Modal + biaya + komisi', 'receipt', 'bg-amber-50 text-amber-600'],
-      ['Keuntungan', U.rupiah(t.profit), 'Margin rata-rata ' + U.pct(t.avgMargin), 'trending-up', 'bg-emerald-50 text-emerald-600']
-    ].map(([label, value, note, ic, tone]) =>
-      '<div class="card p-4 sm:p-5">' +
+      ['Total produk', U.number(t.count), 'Produk pada periode ini', 'package', 'bg-brand-50 text-brand-600', 'stat-brand'],
+      ['Pendapatan', U.rupiah(t.revenue), 'Nilai jual 1 unit/produk', 'wallet', 'bg-slate-100 text-slate-600', 'stat-brand'],
+      ['Total biaya', U.rupiah(t.cost), 'Modal + biaya + komisi', 'receipt', 'bg-amber-50 text-amber-600', 'stat-neutral'],
+      ['Keuntungan', U.rupiah(t.profit), 'Margin rata-rata ' + U.pct(t.avgMargin), 'trending-up', 'bg-emerald-50 text-emerald-600', 'stat-profit']
+    ].map(([label, value, note, ic, tone, statTone]) =>
+      '<div class="card stat-card ' + statTone + ' p-4 sm:p-5">' +
         '<div class="flex items-center justify-between gap-2">' +
           '<p class="text-[10.5px] font-semibold uppercase tracking-[0.07em] text-slate-400">' + label + '</p>' +
           '<span class="w-8 h-8 rounded-lg ' + tone + ' grid place-items-center shrink-0">' + U.icon(ic, 'w-4 h-4') + '</span>' +
@@ -104,6 +105,7 @@ window.Views = window.Views || {};
       '<div class="space-y-5">' +
         '<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">' +
           '<div>' +
+            UI.pageEyebrow('Laporan keuangan') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Laporan</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Ringkasan keuangan usaha untuk periode ' + meta.label.toLowerCase() + '.</p>' +
           '</div>' +

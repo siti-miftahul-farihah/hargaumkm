@@ -294,6 +294,7 @@ window.App = (function () {
       const overlay = document.getElementById('sidebar-overlay');
       if (sidebar) sidebar.classList.remove('-translate-x-full');
       if (overlay) overlay.classList.remove('hidden');
+      document.body.classList.add('menu-open');
     },
 
     closeMenus: function () {
@@ -301,6 +302,7 @@ window.App = (function () {
       const overlay = document.getElementById('sidebar-overlay');
       if (sidebar) sidebar.classList.add('-translate-x-full');
       if (overlay) overlay.classList.add('hidden');
+      document.body.classList.remove('menu-open');
       this.closeLandingMenu();
     },
 

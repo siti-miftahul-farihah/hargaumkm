@@ -53,6 +53,7 @@ window.Views = window.Views || {};
     return (
       '<div class="space-y-5">' +
         '<div>' +
+          UI.pageEyebrow('Pusat bantuan') +
           '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Bantuan & FAQ</h1>' +
           '<p class="mt-1 text-[12.5px] text-slate-500">Panduan singkat dan jawaban untuk pertanyaan yang sering muncul.</p>' +
         '</div>' +

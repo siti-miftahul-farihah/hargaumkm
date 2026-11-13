@@ -3,9 +3,9 @@ window.Views = window.Views || {};
 
 (function () {
   const marginTone = (m) => {
-    if (m >= 30) return { label: 'Sehat', cls: 'badge-green' };
-    if (m >= 15) return { label: 'Cukup', cls: 'badge-amber' };
-    return { label: 'Tipis', cls: 'badge-red' };
+    if (m >= 30) return { label: 'Sehat', cls: 'badge-green', tile: 'bg-emerald-50 border-emerald-100 text-emerald-600' };
+    if (m >= 15) return { label: 'Cukup', cls: 'badge-amber', tile: 'bg-amber-50 border-amber-100 text-amber-600' };
+    return { label: 'Tipis', cls: 'badge-red', tile: 'bg-rose-50 border-rose-100 text-rose-600' };
   };
 
   function statCard(iconName, tone, label, value, foot) {
@@ -52,7 +52,7 @@ window.Views = window.Views || {};
         '<tr>' +
           '<td>' +
             '<div class="flex items-center gap-3">' +
-              '<span class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 grid place-items-center shrink-0">' + U.icon('package', 'w-4 h-4') + '</span>' +
+              '<span class="w-9 h-9 rounded-xl border ' + tone.tile + ' grid place-items-center shrink-0">' + U.icon('package', 'w-4 h-4') + '</span>' +
               '<div class="min-w-0"><p class="font-semibold text-slate-800 truncate max-w-[190px]">' + U.esc(p.name) + '</p>' +
               '<p class="text-[11px] text-slate-400">' + U.esc((Number(p.productionQty) || 0) > 0 ? U.number(p.productionQty) + ' unit · ' + U.dateShort(p.createdAt) : U.dateShort(p.createdAt)) + '</p></div>' +
             '</div>' +
@@ -86,6 +86,7 @@ window.Views = window.Views || {};
       '<div class="space-y-6">' +
         '<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">' +
           '<div>' +
+            UI.pageEyebrow('Ringkasan usaha') +
             '<p class="text-[12.5px] text-slate-500">' + greeting + ',</p>' +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">' + U.esc(firstName) + '</h1>' +
             '<p class="mt-1 text-[12px] text-slate-400">' + U.dateLong(new Date()) + '</p>' +

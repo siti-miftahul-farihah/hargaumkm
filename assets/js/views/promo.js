@@ -171,6 +171,7 @@ window.Views = window.Views || {};
       return (
         '<div class="space-y-5">' +
           '<div>' +
+            UI.pageEyebrow('Optimasi diskon') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950">Simulasi Promo</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Uji diskon sebelum promo dijalankan.</p>' +
           '</div>' +
@@ -201,6 +202,7 @@ window.Views = window.Views || {};
       '<div class="space-y-5">' +
         '<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">' +
           '<div>' +
+            UI.pageEyebrow('Optimasi diskon') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Simulasi Promo</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Atur diskon, lihat dampaknya ke keuntungan, lalu putuskan.</p>' +
           '</div>' +
@@ -251,7 +253,7 @@ window.Views = window.Views || {};
 
             '<div class="mt-5">' +
               '<input type="range" min="0" max="50" step="1" value="' + U.esc(state.discount) + '" data-discount-range ' +
-                'class="w-full h-1.5 accent-brand-600 cursor-pointer" aria-label="Geser besar diskon">' +
+                'class="promo-range" aria-label="Geser besar diskon">' +
               '<div class="flex justify-between text-[10px] text-slate-400 mt-1.5"><span>0%</span><span>25%</span><span>50%</span></div>' +
             '</div>' +
 

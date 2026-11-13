@@ -76,6 +76,7 @@ window.Views = window.Views || {};
       '<div class="space-y-5">' +
         '<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">' +
           '<div>' +
+            UI.pageEyebrow('Jejak simulasi') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Riwayat Simulasi</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Semua kalkulasi harga dan simulasi promo yang pernah disimpan.</p>' +
           '</div>' +

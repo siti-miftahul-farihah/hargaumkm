@@ -300,6 +300,7 @@ window.Views = window.Views || {};
     return (
       '<div class="space-y-5">' +
         '<div>' +
+          UI.pageEyebrow('Akun & preferensi') +
           '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Pengaturan</h1>' +
           '<p class="mt-1 text-[12.5px] text-slate-500">Kelola profil, keamanan, notifikasi, dan paket akun Anda.</p>' +
         '</div>' +

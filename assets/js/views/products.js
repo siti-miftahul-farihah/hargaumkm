@@ -3,9 +3,9 @@ window.Views = window.Views || {};
 
 (function () {
   const tone = (m) => {
-    if (m >= 30) return { label: 'Sehat', cls: 'badge-green' };
-    if (m >= 15) return { label: 'Cukup', cls: 'badge-amber' };
-    return { label: 'Tipis', cls: 'badge-red' };
+    if (m >= 30) return { label: 'Sehat', cls: 'badge-green', tile: 'bg-emerald-50 border-emerald-100 text-emerald-600' };
+    if (m >= 15) return { label: 'Cukup', cls: 'badge-amber', tile: 'bg-amber-50 border-amber-100 text-amber-600' };
+    return { label: 'Tipis', cls: 'badge-red', tile: 'bg-rose-50 border-rose-100 text-rose-600' };
   };
 
   const productMeta = (p) => {
@@ -27,6 +27,7 @@ window.Views = window.Views || {};
     const header =
       '<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">' +
         '<div>' +
+          UI.pageEyebrow('Katalog usaha') +
           '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Produk Saya</h1>' +
           '<p class="mt-1 text-[12.5px] text-slate-500">Semua produk yang sudah Anda hitung dan simpan.</p>' +
         '</div>' +
@@ -52,7 +53,7 @@ window.Views = window.Views || {};
         '<tr data-product-row data-name="' + U.esc(String(p.name).toLowerCase()) + '">' +
           '<td>' +
             '<div class="flex items-center gap-3">' +
-              '<span class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 grid place-items-center shrink-0">' + U.icon('package', 'w-4 h-4') + '</span>' +
+              '<span class="w-9 h-9 rounded-xl border ' + t.tile + ' grid place-items-center shrink-0">' + U.icon('package', 'w-4 h-4') + '</span>' +
               '<div class="min-w-0"><p class="font-semibold text-slate-800 truncate max-w-[210px]">' + U.esc(p.name) + '</p>' +
               '<p class="text-[11px] text-slate-400">' + U.esc(productMeta(p)) + '</p></div>' +
             '</div>' +
@@ -77,7 +78,7 @@ window.Views = window.Views || {};
       return (
         '<div data-product-row data-name="' + U.esc(String(p.name).toLowerCase()) + '" class="card p-4">' +
           '<div class="flex items-start gap-3">' +
-            '<span class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 grid place-items-center shrink-0">' + U.icon('package', 'w-5 h-5') + '</span>' +
+            '<span class="w-10 h-10 rounded-xl border ' + t.tile + ' grid place-items-center shrink-0">' + U.icon('package', 'w-5 h-5') + '</span>' +
             '<div class="min-w-0 flex-1">' +
               '<p class="font-semibold text-slate-800 truncate">' + U.esc(p.name) + '</p>' +
               '<p class="text-[11px] text-slate-400">' + U.esc(productMeta(p)) + '</p>' +
@@ -89,9 +90,9 @@ window.Views = window.Views || {};
             '<div><p class="text-[10px] text-slate-400">Keuntungan</p><p class="text-[13px] font-bold text-emerald-600 num mt-0.5">' + U.rupiah(p.profit) + '</p></div>' +
           '</div>' +
           '<div class="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-2.5">' +
-            '<button class="btn btn-ghost !py-1.5 !px-2.5 !text-[11.5px]" data-action="view-product" data-id="' + p.id + '">' + U.icon('eye', 'w-3.5 h-3.5') + 'Detail</button>' +
-            '<button class="btn btn-ghost !py-1.5 !px-2.5 !text-[11.5px]" data-action="edit-product" data-id="' + p.id + '">' + U.icon('pencil', 'w-3.5 h-3.5') + 'Edit</button>' +
-            '<button class="btn btn-ghost !py-1.5 !px-2.5 !text-[11.5px] hover:!text-red-600 hover:!bg-red-50" data-action="delete-product" data-id="' + p.id + '">' + U.icon('trash-2', 'w-3.5 h-3.5') + 'Hapus</button>' +
+            '<button class="btn btn-ghost !py-2 !px-3 !text-[11.5px]" data-action="view-product" data-id="' + p.id + '">' + U.icon('eye', 'w-3.5 h-3.5') + 'Detail</button>' +
+            '<button class="btn btn-ghost !py-2 !px-3 !text-[11.5px]" data-action="edit-product" data-id="' + p.id + '">' + U.icon('pencil', 'w-3.5 h-3.5') + 'Edit</button>' +
+            '<button class="btn btn-ghost !py-2 !px-3 !text-[11.5px] hover:!text-red-600 hover:!bg-red-50" data-action="delete-product" data-id="' + p.id + '">' + U.icon('trash-2', 'w-3.5 h-3.5') + 'Hapus</button>' +
           '</div>' +
         '</div>'
       );
@@ -191,7 +192,7 @@ window.Views = window.Views || {};
       '<div class="p-6 sm:p-7">' +
         '<div class="flex items-start justify-between gap-4">' +
           '<div class="flex items-start gap-3 min-w-0">' +
-            '<span class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center shrink-0">' + U.icon('package', 'w-5 h-5') + '</span>' +
+            '<span class="w-11 h-11 rounded-2xl border ' + t.tile + ' grid place-items-center shrink-0">' + U.icon('package', 'w-5 h-5') + '</span>' +
             '<div class="min-w-0">' +
               '<p class="text-[10px] font-bold tracking-[0.1em] text-slate-400">DETAIL PRODUK</p>' +
               '<h3 class="text-lg font-bold tracking-tight text-slate-900 truncate">' + U.esc(p.name) + '</h3>' +

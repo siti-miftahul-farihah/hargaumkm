@@ -27,6 +27,7 @@ window.Views = window.Views || {};
       return (
         '<div class="space-y-5">' +
           '<div>' +
+            UI.pageEyebrow('Analisis margin') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950">Perbandingan Keuntungan</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Bandingkan margin semua produk dalam satu tampilan.</p>' +
           '</div>' +
@@ -90,6 +91,7 @@ window.Views = window.Views || {};
       '<div class="space-y-5">' +
         '<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">' +
           '<div>' +
+            UI.pageEyebrow('Analisis margin') +
             '<h1 class="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-950 leading-tight">Perbandingan Keuntungan</h1>' +
             '<p class="mt-1 text-[12.5px] text-slate-500">Urutan produk berdasarkan margin, dari yang paling menguntungkan.</p>' +
           '</div>' +
@@ -97,17 +99,17 @@ window.Views = window.Views || {};
         '</div>' +
 
         '<div class="grid sm:grid-cols-3 gap-4">' +
-          '<div class="card p-5">' +
+          '<div class="card stat-card stat-brand p-5">' +
             '<p class="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">Margin rata-rata</p>' +
             '<p class="mt-1.5 text-[28px] font-extrabold tracking-tight text-slate-900 num leading-none">' + U.pct(avg) + '</p>' +
             '<p class="mt-1.5 text-[11px] text-slate-400">Dari ' + products.length + ' produk</p>' +
           '</div>' +
-          '<div class="card p-5">' +
+          '<div class="card stat-card stat-profit p-5">' +
             '<p class="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">Margin tertinggi</p>' +
             '<p class="mt-1.5 text-[28px] font-extrabold tracking-tight text-emerald-600 num leading-none">' + U.pct(best.margin) + '</p>' +
             '<p class="mt-1.5 text-[11px] text-slate-400 truncate">' + U.esc(best.name) + '</p>' +
           '</div>' +
-          '<div class="card p-5">' +
+          '<div class="card stat-card stat-neutral p-5">' +
             '<p class="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">Perlu perhatian</p>' +
             '<p class="mt-1.5 text-[28px] font-extrabold tracking-tight ' + (low ? 'text-amber-600' : 'text-slate-900') + ' num leading-none">' + low + '</p>' +
             '<p class="mt-1.5 text-[11px] text-slate-400">Produk dengan margin di bawah 15%</p>' +
