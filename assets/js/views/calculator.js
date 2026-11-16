@@ -4,25 +4,43 @@ window.Views = window.Views || {};
 (function () {
   let savingProduct = false;
 
+  function normalizeMaterial(item) {
+    const src = item || {};
+    const legacy = src.purchaseQty == null && src.purchaseUnit == null &&
+      src.usedQty == null && src.usageUnit == null && src.price != null;
+    return {
+      id: String(src.id || U.uid('m')),
+      name: String(src.name || ''),
+      purchaseQty: legacy ? '1' : String(src.purchaseQty == null ? '' : src.purchaseQty),
+      purchaseUnit: legacy ? 'paket' : String(src.purchaseUnit || ''),
+      purchasePrice: String(U.toMoney(src.purchasePrice != null ? src.purchasePrice : src.price)),
+      usedQty: legacy ? '1' : String(src.usedQty == null ? '' : src.usedQty),
+      usageUnit: legacy ? 'paket' : String(src.usageUnit || '')
+    };
+  }
+
   function normalizeMaterials(items) {
     return (Array.isArray(items) ? items : [])
-      .map(function (item) {
-        const src = item || {};
-        return {
-          id: String(src.id || U.uid('m')),
-          name: String(src.name || ''),
-          price: String(U.toMoney(src.price))
-        };
-      })
+      .map(normalizeMaterial)
       .filter(function (item) {
-        return item.name || U.toMoney(item.price) > 0;
+        return item.name || U.toMoney(item.purchasePrice) > 0 || U.toNum(item.purchaseQty) > 0 ||
+          U.toNum(item.usedQty) > 0 || item.purchaseUnit || item.usageUnit;
       });
   }
 
-  function materialTotal(items) {
-    return (Array.isArray(items) ? items : []).reduce(function (sum, item) {
-      return sum + U.toMoney(item && item.price);
-    }, 0);
+  function materialMethod() {
+    const d = App.ui.calc;
+    return d && d.materialMethod === 'materials' ? 'materials' : 'manual';
+  }
+
+  function materialMethodText(method) {
+    return method === 'materials' ? 'Dari rincian bahan' : 'Input manual';
+  }
+
+  function materialMethodHint(method) {
+    return method === 'materials'
+      ? 'Total diambil dari biaya bahan yang benar-benar terpakai untuk satu batch.'
+      : 'Ketik total modal bahan jika Anda sudah mengetahui angkanya. Rincian bahan bersifat opsional.';
   }
 
   Views.blankDraft = function () {
@@ -30,12 +48,13 @@ window.Views = window.Views || {};
       editId: null,
       name: '',
       modal: '',
+      materialMethod: 'manual',
       productionQty: '',
       packaging: '',
       operational: '',
       shipping: '',
       targetProfitTotal: '',
-      materials: [{ id: U.uid('m'), name: 'Garam', price: '2000' }]
+      materials: []
     };
   };
 
@@ -47,17 +66,28 @@ window.Views = window.Views || {};
     const target = product.targetProfitTotal == null || product.targetProfitTotal === ''
       ? (product.profit == null ? '' : product.profit)
       : product.targetProfitTotal;
+    const materials = normalizeMaterials(product.materials);
+    const summary = Calc.materialSummary(materials);
+    let method = product.materialMethod === 'materials' ? 'materials' : 'manual';
+
+    /* Produk lama belum punya materialMethod. Pakai rincian hanya jika totalnya cocok. */
+    if (!product.materialMethod && summary.activeCount > 0 &&
+      Math.abs(summary.usedTotal - U.toMoney(product.modal)) <= 1) {
+      method = 'materials';
+    }
+    if (method === 'materials' && summary.activeCount === 0) method = 'manual';
 
     return {
       editId: product.id,
       name: product.name || '',
-      modal: String(product.modal == null ? '' : product.modal),
+      modal: String(method === 'materials' ? summary.usedTotal : U.toMoney(product.modal)),
+      materialMethod: method,
       productionQty: String(qty),
       packaging: String(product.packaging == null ? '' : product.packaging),
       operational: String(product.operational == null ? '' : product.operational),
       shipping: String(product.shipping == null ? '' : product.shipping),
       targetProfitTotal: String(target == null ? '' : target),
-      materials: normalizeMaterials(product.materials)
+      materials: materials
     };
   };
 
@@ -83,10 +113,13 @@ window.Views = window.Views || {};
           'autocomplete="off" data-calc-field="' + field + '" data-money-input ' +
           'value="' + U.esc(U.money(value)) + '" placeholder="0">' +
       '</div>';
+    const labelBlock = o.badge
+      ? '<div class="calc-label-line">' + label(field, text, o) + o.badge + '</div>'
+      : label(field, text, o);
 
     return (
       '<div>' +
-        label(field, text, o) +
+        labelBlock +
         (o.button
           ? '<div class="calc-money-row">' + input + o.button + '</div>'
           : input) +
@@ -150,7 +183,9 @@ window.Views = window.Views || {};
 
           '<div class="calc-result-note">' +
             U.icon('info', 'w-4 h-4 shrink-0') +
-            '<span>Semua biaya dihitung untuk satu batch. Target keuntungan juga untuk satu batch produksi.</span>' +
+            '<span>Semua biaya dihitung untuk satu batch. Target keuntungan juga untuk satu batch produksi.' +
+              (res.materialMethod === 'materials' ? ' Modal bahan memakai total biaya bahan terpakai.' : '') +
+            '</span>' +
           '</div>' +
 
           '<div class="calc-result-actions">' +
@@ -175,6 +210,7 @@ window.Views = window.Views || {};
 
     const d = App.ui.calc;
     const editing = !!d.editId;
+    const method = materialMethod();
     const premium = App.data.user.premium;
     const atLimit = !premium && !editing && App.data.products.length >= UI.LIMITS.products;
 
@@ -183,6 +219,12 @@ window.Views = window.Views || {};
         U.icon('list', 'w-3.5 h-3.5') +
         '<span>Rinci Bahan</span>' +
       '</button>';
+
+    const methodBadge =
+      '<span id="calc-material-method" class="calc-method-badge' +
+        (method === 'materials' ? ' is-materials' : '') + '">' +
+        materialMethodText(method) +
+      '</span>';
 
     return (
       '<div class="calc-page">' +
@@ -226,7 +268,8 @@ window.Views = window.Views || {};
               moneyField('modal', 'Modal Bahan Total', d.modal, {
                 required: true,
                 button: detailButton,
-                hint: 'Klik Rinci Bahan untuk menjumlahkan harga bahan baku secara otomatis.'
+                badge: methodBadge,
+                hint: '<span id="calc-material-hint">' + materialMethodHint(method) + '</span>'
               }) +
 
               '<div>' +
@@ -275,22 +318,112 @@ window.Views = window.Views || {};
     U.refreshIcons();
   };
 
-  function materialRow(item) {
+  Views.syncMaterialMethod = function () {
+    const method = materialMethod();
+    const badge = document.getElementById('calc-material-method');
+    const note = document.getElementById('calc-material-hint');
+    if (badge) {
+      badge.textContent = materialMethodText(method);
+      badge.classList.toggle('is-materials', method === 'materials');
+    }
+    if (note) note.textContent = materialMethodHint(method);
+  };
+
+  function materialRow(item, index) {
     const id = U.esc(item.id);
+    const summary = Calc.materialSummary([item]).rows[0] || {};
+    const warning = summary.error || '';
     return (
-      '<div class="material-row" data-material-row="' + id + '">' +
-        '<input class="calc-input material-name" type="text" data-material-field="name" data-material-id="' + id + '" ' +
-          'value="' + U.esc(item.name) + '" placeholder="Nama bahan" autocomplete="off" aria-label="Nama bahan">' +
-        '<div class="calc-input-wrap">' +
-          '<span class="calc-prefix">Rp</span>' +
-          '<input class="calc-input calc-input-money material-price" type="text" inputmode="numeric" data-material-field="price" ' +
-            'data-material-money data-material-id="' + id + '" value="' + U.esc(U.money(item.price)) + '" ' +
-            'placeholder="0" aria-label="Harga bahan">' +
+      '<div class="material-card' + (warning ? ' is-invalid' : '') + '" data-material-card="' + id + '">' +
+        '<div class="material-card-head">' +
+          '<span class="material-number">Bahan ' + (index + 1) + '</span>' +
+          '<button type="button" class="material-del" data-action="remove-material" data-id="' + id + '" aria-label="Hapus bahan ' + (index + 1) + '">' +
+            U.icon('trash-2', 'w-4 h-4') +
+            '<span>Hapus</span>' +
+          '</button>' +
         '</div>' +
-        '<button type="button" class="material-del" data-action="remove-material" data-id="' + id + '" aria-label="Hapus bahan">' +
-          U.icon('trash-2', 'w-4 h-4') +
-        '</button>' +
+        '<div class="material-fields">' +
+          '<div class="material-field material-field-full">' +
+            '<label class="material-label" for="material-name-' + id + '">Nama Bahan <span class="calc-required">*</span></label>' +
+            '<input id="material-name-' + id + '" class="calc-input" type="text" data-material-field="name" data-material-id="' + id + '" ' +
+              'value="' + U.esc(item.name) + '" placeholder="Contoh: Tepung Terigu" autocomplete="off">' +
+          '</div>' +
+
+          '<div class="material-field-row">' +
+            '<div class="material-field">' +
+              '<label class="material-label" for="material-purchase-qty-' + id + '">Jumlah Pembelian <span class="calc-required">*</span></label>' +
+              '<input id="material-purchase-qty-' + id + '" class="calc-input" type="number" min="0" step="any" inputmode="decimal" ' +
+                'data-material-field="purchaseQty" data-material-id="' + id + '" value="' + U.esc(item.purchaseQty) + '" placeholder="Contoh: 1">' +
+            '</div>' +
+            '<div class="material-field">' +
+              '<label class="material-label" for="material-purchase-unit-' + id + '">Satuan Pembelian <span class="calc-required">*</span></label>' +
+              '<input id="material-purchase-unit-' + id + '" class="calc-input" type="text" list="material-unit-options" ' +
+                'data-material-field="purchaseUnit" data-material-id="' + id + '" value="' + U.esc(item.purchaseUnit) + '" ' +
+                'placeholder="Contoh: kg" autocomplete="off">' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="material-field material-field-full">' +
+            '<label class="material-label" for="material-purchase-price-' + id + '">Harga Pembelian Total (Rp) <span class="calc-required">*</span></label>' +
+            '<div class="calc-input-wrap">' +
+              '<span class="calc-prefix">Rp</span>' +
+              '<input id="material-purchase-price-' + id + '" class="calc-input calc-input-money" type="text" inputmode="numeric" ' +
+                'data-material-field="purchasePrice" data-material-money data-material-id="' + id + '" ' +
+                'value="' + U.esc(U.money(item.purchasePrice)) + '" placeholder="Contoh: 18.000">' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="material-field-row">' +
+            '<div class="material-field">' +
+              '<label class="material-label" for="material-used-qty-' + id + '">Jumlah Digunakan <span class="calc-required">*</span></label>' +
+              '<input id="material-used-qty-' + id + '" class="calc-input" type="number" min="0" step="any" inputmode="decimal" ' +
+                'data-material-field="usedQty" data-material-id="' + id + '" value="' + U.esc(item.usedQty) + '" placeholder="Contoh: 200">' +
+            '</div>' +
+            '<div class="material-field">' +
+              '<label class="material-label" for="material-usage-unit-' + id + '">Satuan Penggunaan <span class="calc-required">*</span></label>' +
+              '<input id="material-usage-unit-' + id + '" class="calc-input" type="text" list="material-unit-options" ' +
+                'data-material-field="usageUnit" data-material-id="' + id + '" value="' + U.esc(item.usageUnit) + '" ' +
+                'placeholder="Contoh: gram" autocomplete="off">' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="material-cost">' +
+            '<span class="material-cost-label">Biaya Bahan Terpakai</span>' +
+            '<strong class="material-cost-value num" data-material-cost="' + id + '">' + U.rupiah(summary.usedCost || 0) + '</strong>' +
+          '</div>' +
+          '<p class="material-warning" data-material-warning="' + id + '"' + (warning ? '' : ' hidden') + '>' + U.esc(warning) + '</p>' +
+        '</div>' +
       '</div>'
+    );
+  }
+
+  function materialElement(attr, id) {
+    const nodes = document.querySelectorAll('[' + attr + ']');
+    for (let i = 0; i < nodes.length; i += 1) {
+      if (nodes[i].getAttribute(attr) === id) return nodes[i];
+    }
+    return null;
+  }
+
+  function materialSummaryHtml(items) {
+    const summary = Calc.materialSummary(items);
+    return (
+      '<div class="material-summary">' +
+        '<div class="material-summary-card material-summary-purchase">' +
+          '<p class="material-summary-label">Total Harga Pembelian Bahan</p>' +
+          '<p id="materials-purchase-total" class="material-summary-value num">' + U.rupiah(summary.purchaseTotal) + '</p>' +
+          '<p class="material-summary-note">Nilai seluruh bahan yang dibeli. Bukan biaya untuk satu batch.</p>' +
+        '</div>' +
+        '<div class="material-summary-card material-summary-used">' +
+          '<p class="material-summary-label">Total Biaya Bahan Terpakai</p>' +
+          '<p id="materials-total" class="material-summary-value material-summary-value-lg num">' + U.rupiah(summary.usedTotal) + '</p>' +
+          '<p class="material-summary-note">Dipakai untuk menghitung HPP satu batch produksi.</p>' +
+        '</div>' +
+      '</div>' +
+      '<p id="materials-summary-warning" class="material-summary-warning"' + (summary.errors.length ? '' : ' hidden') + '>' +
+        U.esc(summary.errors[0] || '') +
+      '</p>' +
+      '<p class="material-summary-apply-note">Tombol <strong>Gunakan Total Ini</strong> memakai Total Biaya Bahan Terpakai, bukan total harga pembelian.</p>'
     );
   }
 
@@ -304,7 +437,7 @@ window.Views = window.Views || {};
           '<div>' +
             '<p class="calc-modal-eyebrow">RINCIAN BAHAN</p>' +
             '<h2 class="calc-modal-title">Rincian Bahan Mentah / Resep</h2>' +
-            '<p class="calc-modal-desc">Jabarkan komponen bahan baku secara rinci untuk HPP.</p>' +
+            '<p class="calc-modal-desc">Masukkan jumlah bahan yang dibeli dan yang benar-benar dipakai untuk satu batch. Cocok untuk makanan, pakaian, kerajinan, dan produk UMKM lainnya.</p>' +
           '</div>' +
           '<button type="button" class="calc-modal-close" data-action="cancel-materials" aria-label="Tutup">' +
             U.icon('x', 'w-4 h-4') +
@@ -312,12 +445,16 @@ window.Views = window.Views || {};
         '</div>' +
 
         '<div class="calc-modal-body">' +
-          '<div class="material-head">' +
-            '<span>Nama Bahan</span>' +
-            '<span>Harga Bahan (Rp)</span>' +
-            '<span></span>' +
+          '<div class="material-formula-note">' +
+            U.icon('calculator', 'w-4 h-4 shrink-0') +
+            '<p>Biaya bahan terpakai = (jumlah digunakan ÷ jumlah pembelian) × harga pembelian total. Satuan berat, volume, dan panjang dikonversi otomatis.</p>' +
           '</div>' +
-          '<div id="materials-list">' +
+          '<datalist id="material-unit-options">' +
+            Calc.unitOptions.map(function (unit) {
+              return '<option value="' + U.esc(unit) + '"></option>';
+            }).join('') +
+          '</datalist>' +
+          '<div id="materials-list" class="material-list">' +
             (items.length
               ? items.map(materialRow).join('')
               : '<div class="material-empty">Belum ada bahan. Tambahkan bahan pertama Anda.</div>') +
@@ -326,18 +463,15 @@ window.Views = window.Views || {};
             U.icon('plus', 'w-4 h-4') + 'Tambah Bahan Lain' +
           '</button>' +
 
-          '<div class="calc-material-total">' +
-            '<div>' +
-              '<p class="calc-material-total-label">Total Modal Bahan</p>' +
-              '<p class="calc-material-total-note">Otomatis dari seluruh harga bahan di atas.</p>' +
-            '</div>' +
-            '<p id="materials-total" class="calc-material-total-value num">' + U.rupiah(materialTotal(items)) + '</p>' +
-          '</div>' +
+          materialSummaryHtml(items) +
         '</div>' +
 
         '<div class="calc-modal-foot">' +
-          '<button type="button" class="calc-cancel-btn" data-action="cancel-materials">Batal</button>' +
-          '<button type="button" class="calc-apply-btn" data-action="apply-materials">Gunakan Total Ini</button>' +
+          '<p class="calc-modal-foot-note">Batal tidak mengubah form utama.</p>' +
+          '<div class="calc-modal-foot-actions">' +
+            '<button type="button" class="calc-cancel-btn" data-action="cancel-materials">Batal</button>' +
+            '<button type="button" class="calc-apply-btn" data-action="apply-materials">Gunakan Total Ini</button>' +
+          '</div>' +
         '</div>' +
       '</div>'
     );
@@ -349,13 +483,21 @@ window.Views = window.Views || {};
 
     const items = normalizeMaterials(d.materials);
     if (!items.length) {
-      items.push({ id: U.uid('m'), name: '', price: '' });
+      items.push({
+        id: U.uid('m'),
+        name: '',
+        purchaseQty: '',
+        purchaseUnit: '',
+        purchasePrice: '',
+        usedQty: '',
+        usageUnit: ''
+      });
     }
     App.ui.materialsDraft = { items: items };
 
     U.openModal(materialsModalHtml(), {
       label: 'Rincian Bahan Mentah',
-      size: 'max-w-2xl',
+      size: 'max-w-3xl',
       className: 'calc-modal-panel'
     });
   };
@@ -374,22 +516,56 @@ window.Views = window.Views || {};
 
   Views.materialsUpdateTotal = function () {
     const draft = App.ui.materialsDraft;
-    const el = document.getElementById('materials-total');
-    if (!draft || !el) return;
-    el.textContent = U.rupiah(materialTotal(draft.items));
+    if (!draft) return;
+    const summary = Calc.materialSummary(draft.items);
+    const purchaseEl = document.getElementById('materials-purchase-total');
+    const usedEl = document.getElementById('materials-total');
+    const warningEl = document.getElementById('materials-summary-warning');
+
+    if (purchaseEl) purchaseEl.textContent = U.rupiah(summary.purchaseTotal);
+    if (usedEl) usedEl.textContent = U.rupiah(summary.usedTotal);
+    if (warningEl) {
+      warningEl.hidden = summary.errors.length === 0;
+      warningEl.textContent = summary.errors.length === 1
+        ? summary.errors[0]
+        : (summary.errors.length > 1 ? summary.errors.length + ' bahan perlu diperbaiki. ' + summary.errors[0] : '');
+    }
+
+    summary.rows.forEach(function (row) {
+      const costEl = materialElement('data-material-cost', row.id);
+      if (costEl) costEl.textContent = U.rupiah(row.usedCost);
+      const rowWarning = materialElement('data-material-warning', row.id);
+      if (rowWarning) {
+        rowWarning.hidden = !row.error;
+        rowWarning.textContent = row.error || '';
+      }
+      const card = materialElement('data-material-card', row.id);
+      if (card) card.classList.toggle('is-invalid', Boolean(row.error));
+    });
   };
 
   Views.addMaterial = function () {
     const draft = App.ui.materialsDraft;
     if (!draft) return;
-    draft.items.push({ id: U.uid('m'), name: '', price: '' });
+    draft.items.push({
+      id: U.uid('m'),
+      name: '',
+      purchaseQty: '',
+      purchaseUnit: '',
+      purchasePrice: '',
+      usedQty: '',
+      usageUnit: ''
+    });
     Views.renderMaterials();
 
     const list = document.getElementById('materials-list');
     if (!list) return;
     const inputs = list.querySelectorAll('[data-material-field="name"]');
     const last = inputs[inputs.length - 1];
-    if (last) last.focus();
+    if (last) {
+      last.focus();
+      last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   };
 
   Views.removeMaterial = function (id) {
@@ -408,14 +584,17 @@ window.Views = window.Views || {};
     const item = draft.items.find(function (row) { return row.id === id; });
     if (!item) return;
 
-    if (field === 'price') {
+    const editable = ['name', 'purchaseQty', 'purchaseUnit', 'purchasePrice', 'usedQty', 'usageUnit'];
+    if (editable.indexOf(field) === -1) return;
+
+    if (field === 'purchasePrice') {
       const digits = String(el.value || '').replace(/\D/g, '');
-      item.price = digits;
+      item.purchasePrice = digits;
       el.value = digits ? U.money(digits) : '';
-      Views.materialsUpdateTotal();
     } else {
-      item.name = el.value;
+      item[field] = el.value;
     }
+    Views.materialsUpdateTotal();
   };
 
   Views.applyMaterials = function () {
@@ -423,27 +602,48 @@ window.Views = window.Views || {};
     const draft = App.ui.materialsDraft;
     if (!d || !draft) return;
 
-    const items = draft.items
-      .map(function (item) {
-        return {
-          id: item.id || U.uid('m'),
-          name: String(item.name || '').trim(),
-          price: U.toMoney(item.price)
-        };
-      })
-      .filter(function (item) { return item.name || item.price > 0; });
+    const summary = Calc.materialSummary(draft.items);
+    if (!summary.activeCount) {
+      U.toast('Isi minimal satu bahan, atau gunakan input manual pada Modal Bahan Total.', 'error');
+      return;
+    }
+    if (summary.errors.length) {
+      U.toast(summary.errors[0], 'error');
+      const firstRow = summary.rows.find(function (row) { return row.error; });
+      const card = firstRow ? materialElement('data-material-card', firstRow.id) : null;
+      if (card) {
+        const firstInput = card.querySelector('input');
+        if (firstInput) firstInput.focus();
+        card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+      return;
+    }
 
-    const total = materialTotal(items);
+    const items = summary.rows.filter(function (row) { return row.active; }).map(function (row) {
+      return {
+        id: row.id,
+        name: row.name,
+        purchaseQty: row.purchaseQty,
+        purchaseUnit: row.purchaseUnit,
+        purchasePrice: row.purchasePrice,
+        usedQty: row.usedQty,
+        usageUnit: row.usageUnit,
+        usedCost: row.usedCost
+      };
+    });
+
     d.materials = items;
-    d.modal = items.length ? String(total) : '';
+    d.materialMethod = 'materials';
+    d.modal = String(summary.usedTotal);
 
     const input = document.getElementById('calc-modal');
     if (input) input.value = U.money(d.modal);
 
-    U.closeModal();
     App.ui.materialsDraft = null;
+    Views.syncMaterialMethod();
     Views.calcUpdate();
-    U.toast('Total modal bahan berhasil diterapkan.');
+    U.closeModal();
+    U.toast('Total biaya bahan terpakai diterapkan ke Modal Bahan Total.');
   };
 
   Views.cancelMaterials = function () {
@@ -462,14 +662,22 @@ window.Views = window.Views || {};
       return;
     }
 
-    if (U.toMoney(d.modal) <= 0) {
+    if (d.materialMethod === 'materials') {
+      const materialCheck = Calc.materialSummary(d.materials);
+      if (materialCheck.activeCount && materialCheck.errors.length) {
+        U.toast(materialCheck.errors[0], 'error');
+        return;
+      }
+    }
+
+    const res = Calc.batch(d);
+    if (res.modal <= 0) {
       U.toast('Modal bahan total wajib diisi lebih dari Rp 0.', 'error');
       const input = document.getElementById('calc-modal');
       if (input) input.focus();
       return;
     }
 
-    const res = Calc.batch(d);
     if (!res.hasQty) {
       U.toast('Jumlah hasil produksi wajib diisi lebih dari 0.', 'error');
       const input = document.getElementById('calc-productionQty');
@@ -490,13 +698,27 @@ window.Views = window.Views || {};
       return;
     }
 
-    const materials = normalizeMaterials(d.materials).map(function (item) {
-      return { id: item.id, name: item.name, price: U.toMoney(item.price) };
-    });
+    const materials = (res.materials || [])
+      .filter(function (row) { return row.active && !row.error; })
+      .map(function (row) {
+        return {
+          id: row.id,
+          name: row.name,
+          purchaseQty: row.purchaseQty,
+          purchaseUnit: row.purchaseUnit,
+          purchasePrice: row.purchasePrice,
+          usedQty: row.usedQty,
+          usageUnit: row.usageUnit,
+          usedCost: row.usedCost
+        };
+      });
 
     const payload = {
       name: String(d.name).trim(),
       modal: res.modal,
+      materialMethod: res.materialMethod,
+      materialPurchaseTotal: res.materialPurchaseTotal,
+      materialUsedTotal: res.materialUsedTotal,
       productionQty: res.productionQty,
       packaging: res.packaging,
       operational: res.operational,

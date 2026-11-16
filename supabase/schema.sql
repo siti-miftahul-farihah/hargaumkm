@@ -72,6 +72,9 @@ create table if not exists public.hargaumkm_products (
   shipping numeric not null default 0,
   target_profit_total numeric not null default 0,
   materials jsonb not null default '[]'::jsonb,
+  material_method text not null default 'manual',
+  material_purchase_total numeric not null default 0,
+  material_used_total numeric not null default 0,
   commission_type text not null default 'percent',
   commission_value numeric not null default 0,
   target_type text not null default 'percent',
@@ -92,6 +95,9 @@ create table if not exists public.hargaumkm_products (
 alter table public.hargaumkm_products add column if not exists production_qty numeric not null default 1;
 alter table public.hargaumkm_products add column if not exists target_profit_total numeric not null default 0;
 alter table public.hargaumkm_products add column if not exists materials jsonb not null default '[]'::jsonb;
+alter table public.hargaumkm_products add column if not exists material_method text not null default 'manual';
+alter table public.hargaumkm_products add column if not exists material_purchase_total numeric not null default 0;
+alter table public.hargaumkm_products add column if not exists material_used_total numeric not null default 0;
 
 -- Produk lama disimpan per unit sebelum kalkulator batch ada. Isi target batch
 -- dari keuntungan lama agar form edit tidak kehilangan angka.
@@ -301,6 +307,9 @@ as $$
           'shipping', shipping,
           'targetProfitTotal', target_profit_total,
           'materials', materials,
+          'materialMethod', material_method,
+          'materialPurchaseTotal', material_purchase_total,
+          'materialUsedTotal', material_used_total,
           'commissionType', commission_type,
           'commissionValue', commission_value,
           'targetType', target_type,
@@ -404,7 +413,7 @@ begin
   delete from public.hargaumkm_products where user_id = uid;
   insert into public.hargaumkm_products (
     user_id, id, name, modal, production_qty, packaging, operational, shipping,
-    target_profit_total, materials,
+    target_profit_total, materials, material_method, material_purchase_total, material_used_total,
     commission_type, commission_value, target_type, target_value, round_to,
     price, cost_base, commission, total_cost, profit, margin, created_at
   )
@@ -419,6 +428,9 @@ begin
     coalesce(prod.shipping, 0),
     coalesce(prod."targetProfitTotal", 0),
     coalesce(prod.materials, '[]'::jsonb),
+    case when prod."materialMethod" = 'materials' then 'materials' else 'manual' end,
+    coalesce(prod."materialPurchaseTotal", 0),
+    coalesce(prod."materialUsedTotal", 0),
     coalesce(prod."commissionType", 'percent'),
     coalesce(prod."commissionValue", 0),
     coalesce(prod."targetType", 'percent'),
@@ -441,6 +453,9 @@ begin
     shipping numeric,
     "targetProfitTotal" numeric,
     materials jsonb,
+    "materialMethod" text,
+    "materialPurchaseTotal" numeric,
+    "materialUsedTotal" numeric,
     "commissionType" text,
     "commissionValue" numeric,
     "targetType" text,

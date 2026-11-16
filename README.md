@@ -17,14 +17,14 @@ Akun demo berstatus Premium dengan produk dan riwayat contoh. Data akun demo ter
 - Dashboard ringkasan usaha
 - Kelola produk: tambah, lihat detail, edit, hapus, dan cari
 - Hitung HPP batch dengan modal bahan, jumlah hasil produksi, biaya kemasan, operasional, ongkir, dan target keuntungan total
-- Rincian bahan mentah/resep dengan total modal otomatis
+- Rincian bahan mentah/resep dengan konversi satuan dan total biaya bahan terpakai otomatis
 - Simulasi promo dan kalkulator batas diskon aman (Premium)
 - Perbandingan keuntungan antar produk (Premium)
 - Riwayat simulasi
 - Laporan dan ekspor PDF (Premium)
 - Pengaturan profil, keamanan, notifikasi, dan keanggotaan
 - Bantuan & FAQ dengan pencarian dan accordion
-- Layout responsif untuk desktop dan mobile
+- Layout responsif untuk desktop, tablet, dan mobile
 
 ## Paket
 
@@ -63,7 +63,7 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 1. Buat project di https://supabase.com.
 2. Buka **SQL Editor → New query**.
 3. Salin seluruh isi `supabase/schema.sql`, tempel, lalu klik **Run**.
-   - Jika sebelumnya sudah pernah menjalankan schema lama, jalankan ulang berkas terbaru. Proses ini menambahkan kolom `production_qty`, `target_profit_total`, dan `materials`, serta menghapus kolom `category` yang sudah tidak dipakai. Data lama di `hargaumkm_data` tidak dihapus saat schema dijalankan; setelah pengguna masuk, datanya dipindahkan ke tabel baru lalu baris lama dibersihkan.
+   - Jika sebelumnya sudah pernah menjalankan schema lama, jalankan ulang berkas terbaru. Proses ini menambahkan kolom `production_qty`, `target_profit_total`, `materials`, `material_method`, `material_purchase_total`, dan `material_used_total`, serta menghapus kolom `category` yang sudah tidak dipakai. Data lama di `hargaumkm_data` tidak dihapus saat schema dijalankan; setelah pengguna masuk, datanya dipindahkan ke tabel baru lalu baris lama dibersihkan.
 4. Buka **Authentication → Providers → Email** dan pastikan email aktif.
 5. Untuk mempermudah pengujian, matikan **Confirm email** pada **Authentication → Sign In / Providers**.
 6. Buka **Authentication → URL Configuration**, lalu isi:

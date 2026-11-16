@@ -553,6 +553,11 @@ window.App = (function () {
           this.ui.calc[field] = el.value;
         }
 
+        if (field === 'modal') {
+          this.ui.calc.materialMethod = 'manual';
+          Views.syncMaterialMethod();
+        }
+
         if (field !== 'name' && el.tagName !== 'SELECT') {
           Views.calcUpdate();
         }

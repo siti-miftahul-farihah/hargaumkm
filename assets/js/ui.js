@@ -174,8 +174,6 @@ window.UI = (function () {
       { key: 'kalkulator', label: 'Hitung', icon: 'calculator', href: '#/app/kalkulator', primary: true },
       { key: 'riwayat', label: 'Riwayat', icon: 'history', href: '#/app/riwayat' }
     ];
-    const menuKeys = ['promo', 'perbandingan', 'laporan', 'pengaturan', 'bantuan'];
-    const menuActive = menuKeys.indexOf(active) !== -1;
 
     const item = (it) => {
       const isActive = active === it.key;
@@ -192,13 +190,9 @@ window.UI = (function () {
     };
 
     return (
-      '<nav class="mobile-dock lg:hidden no-print" aria-label="Navigasi cepat">' +
+      '<nav class="mobile-dock md:hidden no-print" aria-label="Navigasi cepat">' +
         '<div class="mobile-dock-inner">' +
           items.map(item).join('') +
-          '<button type="button" class="dock-item' + (menuActive ? ' is-active' : '') + '" data-action="open-menu" aria-label="Buka menu lengkap">' +
-            '<span class="dock-icon">' + U.icon('menu', 'w-[19px] h-[19px]') + '</span>' +
-            '<span class="dock-label">Menu</span>' +
-          '</button>' +
         '</div>' +
       '</nav>'
     );
@@ -212,10 +206,10 @@ window.UI = (function () {
         '<div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden" data-action="close-menu"></div>' +
         '<div class="lg:pl-[264px] min-h-screen flex flex-col">' +
           topbar(title, data) +
-          '<main class="flex-1 px-4 sm:px-6 lg:px-8 pt-6 lg:py-8 pb-28 lg:pb-8">' +
+          '<main class="flex-1 px-4 sm:px-6 lg:px-8 pt-6 md:py-8 pb-28 md:pb-8">' +
             '<div class="max-w-[1180px] mx-auto view-enter">' + content + '</div>' +
           '</main>' +
-          '<footer class="px-4 sm:px-6 lg:px-8 pt-5 pb-24 lg:py-5 text-[11px] text-slate-400 border-t border-slate-200/70 no-print">' +
+          '<footer class="px-4 sm:px-6 lg:px-8 pt-5 pb-24 md:pb-5 lg:py-5 text-[11px] text-slate-400 border-t border-slate-200/70 no-print">' +
             '<div class="max-w-[1180px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-1">' +
               '<span>HargaUMKM versi demo. Data tersinkron aman di cloud.</span>' +
               '<span>Dibuat untuk UMKM Indonesia</span>' +

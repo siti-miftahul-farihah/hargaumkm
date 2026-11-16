@@ -168,6 +168,12 @@ window.Views = window.Views || {};
     const batchCost = (Number(p.modal) || 0) + (Number(p.packaging) || 0) +
       (Number(p.operational) || 0) + (Number(p.shipping) || 0);
     const materials = Array.isArray(p.materials) ? p.materials : [];
+    const materialSummary = Calc.materialSummary(materials);
+    const activeMaterials = materialSummary.rows.filter((m) => m.active);
+    const usesMaterials = p.materialMethod === 'materials' ||
+      (!p.materialMethod && activeMaterials.length > 0 &&
+        Math.abs(materialSummary.usedTotal - (Number(p.modal) || 0)) <= 1);
+    const qtyText = (v) => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 3 }).format(Number(v) || 0);
     const targetLabel = p.targetProfitTotal != null
       ? 'Target keuntungan batch ' + U.rupiah(p.targetProfitTotal)
       : (p.targetType === 'nominal'
@@ -181,11 +187,39 @@ window.Views = window.Views || {};
         '<span class="text-[12.5px] font-semibold num ' + (cls || 'text-slate-700') + '">' + value + '</span>' +
       '</div>';
 
-    const materialRows = materials.length
-      ? '<div class="mt-5"><p class="text-[10.5px] font-bold tracking-[0.08em] text-slate-400 mb-1">RINCIAN BAHAN</p>' +
+    const materialRows = activeMaterials.length
+      ? '<div class="mt-5">' +
+          '<div class="flex items-center justify-between gap-2 mb-1">' +
+            '<p class="text-[10.5px] font-bold tracking-[0.08em] text-slate-400">RINCIAN BAHAN</p>' +
+            '<span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full ' +
+              (usesMaterials ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-100 text-slate-500') + '">' +
+              (usesMaterials ? 'Dipakai untuk HPP' : 'Input manual') +
+            '</span>' +
+          '</div>' +
           '<div class="divide-y divide-slate-100">' +
-            materials.map((m) => row(U.esc(m.name || 'Bahan'), U.rupiah(m.price))).join('') +
-          '</div></div>'
+            activeMaterials.map((m) => {
+              const amount = m.compatible
+                ? qtyText(m.purchaseQty) + ' ' + U.esc(m.purchaseUnit) + ' → ' +
+                  qtyText(m.usedQty) + ' ' + U.esc(m.usageUnit)
+                : U.esc(m.purchaseUnit) + ' → ' + U.esc(m.usageUnit);
+              return '<div class="py-2.5">' +
+                '<div class="flex items-center justify-between gap-3">' +
+                  '<span class="text-[12.5px] font-semibold text-slate-700">' + U.esc(m.name || 'Bahan') + '</span>' +
+                  '<span class="text-[12.5px] font-semibold num ' + (usesMaterials ? 'text-emerald-700' : 'text-slate-500') + '">' +
+                    U.rupiah(m.usedCost) +
+                  '</span>' +
+                '</div>' +
+                '<p class="text-[10.5px] text-slate-400 mt-0.5">' + amount + '</p>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+          (usesMaterials
+            ? '<div class="mt-2 pt-2 border-t border-emerald-100 flex items-center justify-between text-[11.5px]">' +
+                '<span class="font-semibold text-emerald-800">Total biaya bahan terpakai</span>' +
+                '<span class="font-bold text-emerald-700 num">' + U.rupiah(materialSummary.usedTotal) + '</span>' +
+              '</div>'
+            : '<p class="mt-2 text-[10.5px] leading-relaxed text-slate-400">Rincian ini tersimpan, tetapi HPP memakai Modal Bahan Total yang diisi manual.</p>') +
+        '</div>'
       : '';
 
     U.openModal(

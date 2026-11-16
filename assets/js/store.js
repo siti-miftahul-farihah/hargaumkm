@@ -145,6 +145,28 @@ window.Store = (function () {
         ? Number(product.profit) || 0
         : Number(product.targetProfitTotal) || 0;
       product.materials = Array.isArray(product.materials) ? product.materials : [];
+
+      /*
+       * Produk lama belum menyimpan metode bahan dan totalnya. Rincian bahan
+       * tetap tersimpan di JSONB, jadi nilainya bisa dipulihkan tanpa membuat
+       * produk lama tidak bisa diedit.
+       */
+      const materialSummary = Calc.materialSummary(product.materials);
+      if (product.materialMethod !== 'materials' && product.materialMethod !== 'manual') {
+        product.materialMethod = materialSummary.activeCount > 0 &&
+          Math.abs(materialSummary.usedTotal - (Number(product.modal) || 0)) <= 1
+          ? 'materials'
+          : 'manual';
+      }
+      if (product.materialMethod === 'materials' && materialSummary.activeCount === 0) {
+        product.materialMethod = 'manual';
+      }
+      if (product.materialPurchaseTotal == null) {
+        product.materialPurchaseTotal = materialSummary.purchaseTotal;
+      }
+      if (product.materialUsedTotal == null) {
+        product.materialUsedTotal = materialSummary.usedTotal;
+      }
       return product;
     });
     d.history = Array.isArray(d.history) ? d.history : [];
@@ -204,6 +226,9 @@ window.Store = (function () {
       createdAt,
       productionQty: 1,
       targetProfitTotal: calc.profit,
+      materialMethod: 'manual',
+      materialPurchaseTotal: 0,
+      materialUsedTotal: 0,
       materials: [],
       price: calc.price,
       costBase: calc.costBase,
