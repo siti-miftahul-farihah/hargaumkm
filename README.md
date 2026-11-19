@@ -46,7 +46,7 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 - Lucide Icons
 - jsPDF + AutoTable
 - Supabase Auth + PostgreSQL
-- GitHub Pages untuk hosting frontend
+- GitHub Pages atau Netlify untuk hosting frontend
 
 ## Struktur tabel Supabase
 
@@ -68,7 +68,7 @@ Premium: Rp 20.000/bulan. Pada versi demo, aktivasi premium berlangsung langsung
 5. Untuk mempermudah pengujian, matikan **Confirm email** pada **Authentication → Sign In / Providers**.
 6. Buka **Authentication → URL Configuration**, lalu isi:
    - **Site URL**: `https://siti-miftahul-farihah.github.io/hargaumkm/`
-   - **Redirect URLs**: tambahkan URL yang sama. Untuk pengembangan lokal, tambahkan juga `http://localhost:3000/` dan `http://localhost:4173/`.
+   - **Redirect URLs**: tambahkan URL yang sama. Untuk pengembangan lokal, tambahkan juga `http://localhost:3000/` dan `http://localhost:4173/`. Jika deploy ke Netlify, tambahkan pula `https://<nama-web>.netlify.app/`.
 7. Buka **Project Settings → API**, ambil **Project URL** dan **anon public key**. Masukkan keduanya ke `assets/js/config.js`.
 
 Jangan pernah menaruh **service_role key** atau database password di frontend.
@@ -93,6 +93,18 @@ Aplikasi memerlukan koneksi internet untuk memuat Tailwind, font, ikon, jsPDF, d
 4. Pilih branch `main` dan folder `/ (root)`, lalu simpan.
 5. Situs akan tersedia di `https://<username>.github.io/hargaumkm/`.
 6. Pastikan **Site URL** dan **Redirect URLs** di Supabase memakai alamat GitHub Pages tersebut.
+
+## Deploy ke Netlify
+
+1. Buka https://app.netlify.com, masuk dengan GitHub, lalu pilih **Add new site → Import an existing project**.
+2. Pilih repository `hargaumkm`. Karena `index.html` ada di root repo, Netlify akan mendeteksi sebagai static site.
+3. Biarkan **Build command** kosong dan **Publish directory** sebagai `.`. Berkas `netlify.toml` di repo sudah mengatur ini otomatis.
+4. Klik **Deploy site**. Secara default Netlify memberi URL acak seperti `https://random-name-123.netlify.app`.
+5. Untuk URL yang lebih mudah diingat, buka **Site configuration → General → Site details → Change site name**, lalu misalnya pakai `hargaumkm-app`. URL-nya menjadi `https://hargaumkm-app.netlify.app`.
+6. Buka **Authentication → URL Configuration** di Supabase, lalu tambahkan URL Netlify tersebut ke **Site URL** dan **Redirect URLs**. Tanpa ini, login bisa gagal setelah redirect.
+7. Jika memakai domain sendiri, masuk ke **Domain management → Custom domains** di Netlify, tambahkan domain, lalu arahkan DNS sesuai petunjuk Netlify. Domain itu juga wajib ditambahkan ke **Redirect URLs** Supabase.
+
+GitHub Pages dan Netlify bisa aktif bersamaan; keduanya memakai kode dan project Supabase yang sama.
 
 ## Catatan data
 

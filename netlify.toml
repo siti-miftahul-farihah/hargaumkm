@@ -1,0 +1,29 @@
+# Konfigurasi deploy statis HargaUMKM di Netlify.
+# Repo sudah berisi index.html di root, jadi tidak perlu build command.
+
+[build]
+  publish = "."
+  command = ""
+
+# Halaman memakai hash routing (#/app/...), tetapi fallback ini menjaga
+# URL langsung tetap membuka aplikasi jika nanti diubah ke path routing.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
