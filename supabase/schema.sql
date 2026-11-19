@@ -72,9 +72,9 @@ create table if not exists public.hargaumkm_products (
   shipping numeric not null default 0,
   target_profit_total numeric not null default 0,
   materials jsonb not null default '[]'::jsonb,
-  material_method text not null default 'manual',
-  material_purchase_total numeric not null default 0,
-  material_used_total numeric not null default 0,
+  material_method text,
+  material_purchase_total numeric,
+  material_used_total numeric,
   commission_type text not null default 'percent',
   commission_value numeric not null default 0,
   target_type text not null default 'percent',
@@ -95,9 +95,11 @@ create table if not exists public.hargaumkm_products (
 alter table public.hargaumkm_products add column if not exists production_qty numeric not null default 1;
 alter table public.hargaumkm_products add column if not exists target_profit_total numeric not null default 0;
 alter table public.hargaumkm_products add column if not exists materials jsonb not null default '[]'::jsonb;
-alter table public.hargaumkm_products add column if not exists material_method text not null default 'manual';
-alter table public.hargaumkm_products add column if not exists material_purchase_total numeric not null default 0;
-alter table public.hargaumkm_products add column if not exists material_used_total numeric not null default 0;
+-- Kolom metode/total sengaja nullable: baris lama dibiarkan kosong agar aplikasi
+-- masih bisa menyimpulkan metode dari rincian bahan yang sudah tersimpan.
+alter table public.hargaumkm_products add column if not exists material_method text;
+alter table public.hargaumkm_products add column if not exists material_purchase_total numeric;
+alter table public.hargaumkm_products add column if not exists material_used_total numeric;
 
 -- Produk lama disimpan per unit sebelum kalkulator batch ada. Isi target batch
 -- dari keuntungan lama agar form edit tidak kehilangan angka.
